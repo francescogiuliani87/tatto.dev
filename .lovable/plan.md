@@ -1,82 +1,76 @@
+## Obiettivo
 
-## Cosa costruiamo
+Sostituire `public/tact/index.html` (1978 righe, servito via server route a `/`) con un'app React/TS bundlata da Vite. UI, comportamento, suoni, sfondo WebGL, generazione Braille/STL e integrazione WebLLM **identici**. Nessun CDN in produzione.
 
-Il repo `thatsfaso/tact` non è una libreria npm: è una singola pagina `index.html` (~2000 righe) con logica vanilla JS. Portiamo **solo** le due parti richieste — traduzione Braille (IT/EN, Grado 1) e generazione STL — come moduli TypeScript riutilizzabili, più una route demo minima che le mostra funzionanti.
+## Cosa cambia (perché è "meglio")
 
-**Fuori scope in questo passo:** generazione della storia via WebLLM (dipende da modelli in-browser e WebGPU — argomento a sé), riconoscimento vocale, sfondo WebGL, UI React originale. Se poi vorrai anche quelli, li aggiungiamo dopo.
-
-**Licenza:** Tact è MIT — includiamo un file `THIRD_PARTY_NOTICES.md` con la nota di attribuzione.
+| Aspetto | Originale | Nuova versione |
+|---|---|---|
+| Tailwind | CDN (~350 KB, "not for production") | Già compilato via Tailwind v4 nel progetto |
+| React | UMD dev 18.3 (~1.1 MB) | Bundle prod (~50 KB gz) |
+| Babel-standalone | ~2 MB, compila JSX nel browser | Rimosso: JSX pre-compilato |
+| Fonts Google | 3 richieste bloccanti | `<link>` in `__root.tsx` head |
+| Codice | 1 file, tutto globale su `window.TACT` / `window.SFX` | Moduli TS tipizzati, import espliciti |
+| Server route | Legge file HTML da disco a ogni GET | Route TSS React normale |
+| First paint | ~2-3s (parse Babel+React) | ~200-400ms |
 
 ## Struttura file
 
-```text
+```
 src/lib/tact/
-  braille.ts         // BRAILLE_MAP IT/EN, normalisePunctuation,
-                     // textToBrailleCells, translateBraille, layoutLines
-  stl.ts             // writer STL binario: dot(), box(),
-                     // roundedSlab(), rasterizeIll(), generateSTL()
-  shapes.ts          // caricamento shapes/index.json + keyword match
-                     // (plurali/diminutivi IT + EN)
-  types.ts           // BrailleCell, PageLayout, STLOptions, Shape
-  index.ts           // barrel export
+  braille.ts          già esiste — completare con normalizePunctuation
+  stl.ts              già esiste — verificare geometria Marburg Medium
+  shapes.ts           già esiste
+  sfx.ts              NUOVO — Web Audio (chime, noiseBurst, startPad, startLoader)
+  chrome-bg.ts        NUOVO — WebGL liquid chrome (shader + rAF loop)
+  webllm.ts           NUOVO — tier selection + engine lifecycle
+  types.ts            estendere con tipi UI
 
-public/tact-shapes/  // ~90 SVG copiati dal repo (animals/, buildings/,
-                     // nature/, objects/, people/, vehicles/) + index.json
+src/components/tact/
+  App.tsx             root del flow (stati: idle, listening, thinking, reading)
+  ChromeBackground.tsx  <canvas> + mount hook
+  MicButton.tsx       pulsante registrazione con mic-pulse
+  TranscriptView.tsx  testo dettato
+  BraillePage.tsx     rendering pagina Braille (bd dots)
+  DownloadPanel.tsx   selettore lingua, forma, STL download
+  SoundToggle.tsx     toggle sound + localStorage
 
-src/routes/
-  index.tsx          // sostituisce il placeholder: demo di porting
+src/styles/tact.css   CSS custom (:root vars, .btn, .card, .bd, keyframes)
+                      importato una volta in __root.tsx
 
-THIRD_PARTY_NOTICES.md  // attribuzione MIT a thatsfaso/tact
+src/routes/index.tsx  rimuovere server handler → component: TactApp
+
+package.json          + @mlc-ai/web-llm (WebLLM in-browser)
 ```
 
-## Moduli TypeScript
+## Piano di esecuzione (7 step)
 
-**`braille.ts`** — porta 1:1 la logica deterministica del repo:
-- `normalisePunctuation(text): string`
-- `translateBraille(text: string, lang: 'it' | 'en'): string` (stringa di caratteri Unicode Braille U+2800…)
-- `textToBrailleCells(text, lang): BrailleCell[]` (array di dot pattern 1–6 per l'export STL)
-- `layoutLines(cells, widths): BrailleCell[][]` (spezza in righe rispettando i margini)
-- Costanti `CAP_INDICATOR`, `NUM_INDICATOR`, `BRAILLE_MAP` con i mapping IT ed EN, tipizzati.
+1. **Estrai codice non-JSX** dall'HTML originale in moduli TS tipizzati:
+   `sfx.ts`, `chrome-bg.ts`, `webllm.ts`. Nessuna modifica logica.
+2. **Estrai CSS** in `src/styles/tact.css`, importato da `__root.tsx`. Aggiungi i `<link>` font in `head()` del root route.
+3. **Ricostruisci l'albero JSX** partendo dal componente root (grep sui `React.createElement`/JSX nell'originale). Un componente per zona funzionale (~7 componenti).
+4. **Sostituisci `window.TACT` / `window.SFX` globals** con import diretti dai moduli.
+5. **Route `/`**: rimuovi il server handler, punta a `<TactApp/>`. Rimuovi `public/tact/` (mantieni solo `public/tact-shapes/` per gli SVG).
+6. **Verifica funzionale** con Playwright headless: mic button clic, generazione Braille di frase test, download STL, toggle sound, sfondo WebGL renderizza. Screenshot side-by-side vs originale.
+7. **Bundle check**: `bun run build`, confronta size chunk `/` con l'originale (~2.5 MB non-gz → target <300 KB gz).
 
-**`stl.ts`** — porta il writer STL binario:
-- `generateSTL(cells, opts): Blob` dove `opts` include dimensioni pagina in mm, raggio angoli, illustrazione (Uint8Array raster dallo shape SVG), numero pagina.
-- Elicheri interni tipizzati: `tri`, `box`, `roundedRectPts`, `roundedSlab`, `dot`, `rasterizeIll` (usa `OffscreenCanvas` quando disponibile, fallback `<canvas>`).
-- Dimensioni ISO 17049:2013 (Marburg Medium) come costanti esportate.
+## Rischi noti
 
-**`shapes.ts`** — indice illustrazioni:
-- `loadShapeIndex(): Promise<Shape[]>` legge `/tact-shapes/index.json`.
-- `matchShape(storyText, lang): Shape | null` — keyword match parola-intera sui `tags`, con gestione plurali/diminutivi IT ed EN come nell'originale.
-- `loadShapeSVG(shape): Promise<string>` fetch dell'SVG dal path pubblico.
+- **WebLLM**: `@mlc-ai/web-llm` è ~200 KB gz ma carica modelli via WebGPU. Va caricato lazy (`import()` dentro handler) per non pesare sul first paint.
+- **WebGL shader**: shader glsl inline è stringa, va copiata byte-per-byte (sensibile a whitespace? no, ma la copia deve essere esatta).
+- **Marburg Medium**: geometria dots STL — già portata, ma richiede test con file STL scaricato aperto in un viewer.
+- **Fedeltà visiva**: ogni animazione/transizione va replicata (rise, drift, mic-pulse, wave, float-soft). Il CSS le contiene già, basta preservarle.
 
-Tutti i moduli sono puramente browser-side: nessuna server function, nessuna dipendenza npm nuova.
+## Dettagli tecnici
 
-## Route demo (`src/routes/index.tsx`)
+- `sfx.ts` esporta un singleton `sfx` con metodi `play(name)`, `startPad()`, `startLoader()`, `setEnabled(v)`. `AudioContext` lazy-initted al primo gesto utente (`useEffect` in `App.tsx` con `pointerdown`/`keydown` una volta).
+- `chrome-bg.ts` esporta `mountChromeBackground(canvas)` che ritorna una funzione di cleanup (rimuove listeners, cancella rAF).
+- `webllm.ts` esporta `loadEngine(onProgress)` che fa dynamic `import('@mlc-ai/web-llm')`, sceglie il tier via `_resolveTierIndex`, con fallback a smaller model on error.
+- Nessun `useState` iniziale legge `localStorage` (violerebbe hydration su SSR): il tema/sound preference si legge in `useEffect` dopo mount. Il route è comunque SSR — se problemi, `ssr: false` per `/`.
+- Bundle target: <300 KB gz per il route `/` escludendo WebLLM lazy.
 
-Sostituisce il placeholder. UI minimale con shadcn (già in progetto):
+## Fuori scope
 
-1. Selettore lingua IT/EN.
-2. Textarea per una frase di prova.
-3. Preview live: caratteri Braille Unicode renderizzati grandi.
-4. Bottone "Scarica STL" che chiama `generateSTL(...)` con una shape scelta dall'utente da un menu a tendina popolato da `shapes/index.json`, e triggera il download del `.stl` come `Blob`.
-5. `head()` con titolo/description dedicati (no più default template).
-
-Nessuna generazione automatica della storia (out of scope).
-
-## Passi di esecuzione
-
-1. Aggiungere `THIRD_PARTY_NOTICES.md` con testo MIT + attribuzione a `thatsfaso/tact`.
-2. Copiare le 7 sottocartelle di `shapes/` + `index.json` in `public/tact-shapes/` (statico, servito così com'è).
-3. Creare i 5 file in `src/lib/tact/` portando il JS del repo a TypeScript stretto (tipi espliciti su tutte le funzioni pubbliche, nessun `any` nelle firme).
-4. Riscrivere `src/routes/index.tsx` con la demo.
-5. Aggiornare `head()` in `src/routes/__root.tsx` (title, description, og) per non lasciare i placeholder "Lovable App" / "Lovable Generated Project".
-
-## Verifiche prima di considerare fatto
-
-- Il typecheck passa (strict).
-- Aprendo `/`, "ciao mondo" in IT produce Braille Unicode corretto (`⠉⠊⠁⠕ ⠍⠕⠝⠙⠕`).
-- Il download `.stl` scarica un file binario >0 byte e apribile in un viewer STL (verifichiamo header 80-byte + count triangoli).
-- Selezionando una shape (es. "cat_sitting"), l'STL include il rilievo dell'illustrazione oltre ai punti Braille.
-
-## Domanda aperta (rispondi in chat quando implementiamo)
-
-Vuoi che la route demo stia su `/` (sostituendo il placeholder, consigliato) o su `/tact` con `/` che redirige lì? Default: su `/`.
+- Nessun cambiamento di UI, testo, colori, font, animazioni.
+- Nessuna ottimizzazione della logica Braille/STL (già ottimale).
+- Nessun cambiamento del formato STL o compatibilità viewer.
