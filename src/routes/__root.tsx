@@ -77,14 +77,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "Tact — Braille + STL demo" },
+      {
+        name: "description",
+        content:
+          "In-browser Grade 1 Braille translation (Italian/English) and printable STL 3D page, ported from thatsfaso/tact.",
+      },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "Tact — Braille + STL demo" },
+      {
+        property: "og:description",
+        content:
+          "Turn a sentence into Grade 1 Braille and a printable 3D page, entirely client-side.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
