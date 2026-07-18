@@ -1,39 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Tact — tell me a story" },
-      {
-        name: "description",
-        content:
-          "Tact turns short stories into printable tactile Braille pages for blind and low-vision readers.",
+  server: {
+    handlers: {
+      GET: async () => {
+        const fs = await import("node:fs/promises");
+        const path = await import("node:path");
+        const filePath = path.join(process.cwd(), "public", "tact", "index.html");
+        let html = await fs.readFile(filePath, "utf-8");
+        // Rewrite relative asset paths so they resolve at site root.
+        html = html
+          .replace(/(['"`])shapes\//g, "$1/tact/shapes/")
+          .replace(/(['"`])assets\//g, "$1/tact/assets/");
+        return new Response(html, {
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+            "cache-control": "no-cache",
+          },
+        });
       },
-      { property: "og:title", content: "Tact — tell me a story" },
-      {
-        property: "og:description",
-        content:
-          "Turn a sentence into Grade 1 Braille and a printable tactile 3D page, entirely in the browser.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: TactApp,
+    },
+  },
+  component: () => null,
 });
-
-function TactApp() {
-  return (
-    <iframe
-      src="/tact/index.html"
-      title="Tact"
-      style={{
-        position: "fixed",
-        inset: 0,
-        width: "100vw",
-        height: "100vh",
-        border: "none",
-      }}
-    />
-  );
-}
