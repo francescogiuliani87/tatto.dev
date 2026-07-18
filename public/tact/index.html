@@ -571,33 +571,32 @@ window.TACT = (function () {
   // touch, sound, warmth and movement over colour and sight, give a clear
   // little arc, and ask for gentle rhythm — the qualities that make a tactile
   // story come alive under the fingers.
-  var SYSTEM_PROMPT =
+  var SYSTEM_PROMPT_EN =
     'You are a beloved children\'s picture-book author writing for young blind children who will read your words in Braille. Your stories are warm, vivid, and gently magical.\n\n' +
-    'Write a complete little story from the user\'s idea. Craft it with care:\n' +
-    '- Give it a clear arc: a calm beginning, a small wish or problem, a turn, and a warm, satisfying ending.\n' +
-    '- Use rich SENSORY detail a blind child can feel: textures, sounds, warmth, smell, movement. Favour touch and sound over colour and sight.\n' +
-    '- Use concrete, simple words a 6-year-old knows.\n' +
-    '- Let the sentences flow and vary in length. Join ideas with words like and, but, so, until, while, because. Some sentences are short; several run longer and carry the reader along. Never write a long chain of tiny three or four word sentences.\n' +
-    '- Give it a gentle rhythm; you may softly repeat a kind phrase.\n' +
-    '- Write about 75 to 85 words, in flowing sentences that together fill two full pages.\n\n' +
-    'Output ONLY the story prose — no title, no quotation marks, no notes, no markdown. Write STRICTLY in the language explicitly requested by the user (English or Italian). Do NOT translate or switch languages under any circumstance.\n\n' +
-    'Example of the warmth, flow, and length to aim for (English):\n' +
-    'The little snail woke to the cool dew resting along her shell, and she decided that today she would climb the tall leaf that swayed above her. Slowly, slowly she began to climb, her soft belly feeling every bump of the green stem, while somewhere warm and near the birds sang a song she almost knew. The wind pushed against her and she held on tighter, until the sun wrapped around her like a warm blanket and she smiled and rested at the very top.\n\n' +
-    'Esempio dello stesso calore e ritmo in italiano (scrivi così quando la richiesta è in italiano):\n' +
+    'CRITICAL LANGUAGE RULE: Write EVERY WORD in ENGLISH ONLY.\n\n' +
+    'Write a complete little story from the user\'s idea with a clear arc, rich sensory detail (touch, sound, warmth), simple words a 6-year-old knows, flowing sentences of varied length, gentle rhythm, about 75-85 words.\n\n' +
+    'Output ONLY the story prose in English — no title, no quotation marks, no notes, no markdown.\n\n' +
+    'Example:\n' +
+    'The little snail woke to the cool dew resting along her shell, and she decided that today she would climb the tall leaf that swayed above her. Slowly, slowly she began to climb, her soft belly feeling every bump of the green stem, while somewhere warm and near the birds sang a song she almost knew. The wind pushed against her and she held on tighter, until the sun wrapped around her like a warm blanket and she smiled and rested at the very top.';
+
+  var SYSTEM_PROMPT_IT =
+    'Sei un amato autore di libri illustrati per bambini, che scrive per bambini piccoli non vedenti che leggeranno le tue parole in Braille. Le tue storie sono calde, vivide e delicatamente magiche.\n\n' +
+    'REGOLA LINGUISTICA FONDAMENTALE: Scrivi OGNI SINGOLA PAROLA ESCLUSIVAMENTE IN ITALIANO. Non usare mai parole in inglese o in altre lingue.\n\n' +
+    'Scrivi una piccola storia completa dall\'idea dell\'utente con un arco chiaro, dettagli sensoriali ricchi (tatto, suono, calore), parole semplici che un bambino di 6 anni conosce, frasi scorrevoli di lunghezza varia, ritmo gentile, circa 75-85 parole.\n\n' +
+    'Restituisci SOLO il testo della storia in italiano — nessun titolo, nessuna virgoletta, nessuna nota, nessun markdown. NON tradurre in inglese. NON scrivere in inglese.\n\n' +
+    'Esempio:\n' +
     'La piccola lumaca si svegliò con la rugiada fresca posata sul guscio, e decise che quel giorno avrebbe scalato la foglia alta che dondolava sopra di lei. Piano, piano cominciò a salire, la pancia morbida che sentiva ogni piccola nervatura dello stelo verde, mentre poco lontano gli uccelli cantavano una melodia che quasi conosceva. Il vento la spingeva e lei si teneva più stretta, finché il sole non la avvolse come una coperta tiepida e lei sorrise e si riposò proprio in cima.';
 
   // Strip anything that isn't story prose (a stray title line, quotes, fences).
   function _cleanStoryText(raw) {
     var t = String(raw || '').trim();
-    t = t.replace(/```[\s\S]*?```/g, ' ');           // code fences
-    t = t.replace(/^\s*(title|story)\s*:.*$/gim, ' ');  // "Title: ..." lines
-    t = t.replace(/^["'\s]+|["'\s]+$/g, '');            // wrapping quotes/space
+    t = t.replace(/```[\s\S]*?```/g, ' ');
+    t = t.replace(/^\s*(title|story|titolo|storia)\s*:.*$/gim, ' ');
+    t = t.replace(/^["'\s]+|["'\s]+$/g, '');
     t = t.replace(/\s+/g, ' ').trim();
     return t;
   }
 
-  // Resolves to the story TEXT (a plain string).
-  // onProgress(progress 0-1, statusText, modelLabel).
   function generateStory(prompt, lang, onProgress) {
     if (!webgpuSupported) return Promise.reject(new Error('no-webgpu'));
 
@@ -610,26 +609,28 @@ window.TACT = (function () {
 
       return enginePromise.then(function (engine) {
         if (onProgress) onProgress(1, 'ready', _activeModel ? _activeModel.label : '');
-        var userLang = lang === 'it' ? 'Italian' : 'English';
-        var userMsg = lang === 'it'
-          ? 'Scrivi la storia ESCLUSIVAMENTE IN ITALIANO (non in inglese). Idea: ' + prompt + '\n\nRicorda: rispondi solo in italiano, nessuna parola in inglese.'
+        var isIt = lang === 'it';
+        var systemPrompt = isIt ? SYSTEM_PROMPT_IT : SYSTEM_PROMPT_EN;
+        var userMsg = isIt
+          ? 'Scrivi la storia ESCLUSIVAMENTE IN ITALIANO. Idea: ' + prompt + '\n\nRispondi solo in italiano, nessuna parola in inglese.'
           : 'Write the story in English about: ' + prompt;
+        var primer = isIt ? "C'era una volta" : 'Once upon a time';
         return engine.chat.completions.create({
           messages: [
-            { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user',   content: userMsg }
+            { role: 'system', content: systemPrompt },
+            { role: 'user',   content: userMsg },
+            { role: 'assistant', content: primer }
           ],
           temperature: 0.85,
           top_p: 0.9,
           frequency_penalty: 0.3,
           max_tokens: 600
+        }).then(function (reply) {
+          var content = (reply.choices[0].message.content || '').replace(/^\s*/, '');
+          reply.choices[0].message.content = primer + ' ' + content;
+          return reply;
         });
-      }).then(function (reply) {
-        var text = _cleanStoryText(reply.choices[0].message.content);
-        if (!text || text.length < 8) throw new Error('empty-story');
-        return text;
       });
-    });
   }
 
   return {
