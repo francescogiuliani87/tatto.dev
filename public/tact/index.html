@@ -627,10 +627,12 @@ window.TACT = (function () {
           max_tokens: 600
         }).then(function (reply) {
           var content = (reply.choices[0].message.content || '').replace(/^\s*/, '');
-          reply.choices[0].message.content = primer + ' ' + content;
-          return reply;
+          var text = _cleanStoryText(primer + ' ' + content);
+          if (!text || text.length < 8) throw new Error('empty-story');
+          return text;
         });
       });
+    });
   }
 
   return {
