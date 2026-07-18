@@ -611,10 +611,13 @@ window.TACT = (function () {
       return enginePromise.then(function (engine) {
         if (onProgress) onProgress(1, 'ready', _activeModel ? _activeModel.label : '');
         var userLang = lang === 'it' ? 'Italian' : 'English';
+        var userMsg = lang === 'it'
+          ? 'Scrivi la storia ESCLUSIVAMENTE IN ITALIANO (non in inglese). Idea: ' + prompt + '\n\nRicorda: rispondi solo in italiano, nessuna parola in inglese.'
+          : 'Write the story in English about: ' + prompt;
         return engine.chat.completions.create({
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user',   content: 'Write the story in ' + userLang + ' about: ' + prompt }
+            { role: 'user',   content: userMsg }
           ],
           temperature: 0.85,
           top_p: 0.9,
