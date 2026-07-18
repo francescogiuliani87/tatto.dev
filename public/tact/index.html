@@ -580,9 +580,11 @@ window.TACT = (function () {
     '- Let the sentences flow and vary in length. Join ideas with words like and, but, so, until, while, because. Some sentences are short; several run longer and carry the reader along. Never write a long chain of tiny three or four word sentences.\n' +
     '- Give it a gentle rhythm; you may softly repeat a kind phrase.\n' +
     '- Write about 75 to 85 words, in flowing sentences that together fill two full pages.\n\n' +
-    'Output ONLY the story prose — no title, no quotation marks, no notes, no markdown. Write in the SAME language as the request.\n\n' +
+    'Output ONLY the story prose — no title, no quotation marks, no notes, no markdown. Write STRICTLY in the language explicitly requested by the user (English or Italian). Do NOT translate or switch languages under any circumstance.\n\n' +
     'Example of the warmth, flow, and length to aim for (English):\n' +
-    'The little snail woke to the cool dew resting along her shell, and she decided that today she would climb the tall leaf that swayed above her. Slowly, slowly she began to climb, her soft belly feeling every bump of the green stem, while somewhere warm and near the birds sang a song she almost knew. The wind pushed against her and she held on tighter, until the sun wrapped around her like a warm blanket and she smiled and rested at the very top.';
+    'The little snail woke to the cool dew resting along her shell, and she decided that today she would climb the tall leaf that swayed above her. Slowly, slowly she began to climb, her soft belly feeling every bump of the green stem, while somewhere warm and near the birds sang a song she almost knew. The wind pushed against her and she held on tighter, until the sun wrapped around her like a warm blanket and she smiled and rested at the very top.\n\n' +
+    'Esempio dello stesso calore e ritmo in italiano (scrivi così quando la richiesta è in italiano):\n' +
+    'La piccola lumaca si svegliò con la rugiada fresca posata sul guscio, e decise che quel giorno avrebbe scalato la foglia alta che dondolava sopra di lei. Piano, piano cominciò a salire, la pancia morbida che sentiva ogni piccola nervatura dello stelo verde, mentre poco lontano gli uccelli cantavano una melodia che quasi conosceva. Il vento la spingeva e lei si teneva più stretta, finché il sole non la avvolse come una coperta tiepida e lei sorrise e si riposò proprio in cima.';
 
   // Strip anything that isn't story prose (a stray title line, quotes, fences).
   function _cleanStoryText(raw) {
