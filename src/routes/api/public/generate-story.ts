@@ -116,9 +116,9 @@ Each paragraph: 2 sentences, 22-32 words. No title, no numbering, no headings. O
               max_tokens: 650,
               stop: ['\n\n\n'],
             }),
-
-
+            signal: AbortSignal.timeout(25_000),
           })
+
 
           if (!upstream.ok) {
             const text = await upstream.text().catch(() => '')
