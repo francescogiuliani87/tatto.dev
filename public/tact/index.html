@@ -705,35 +705,42 @@ window.TACT = (function () {
   function englishStory(idea) {
     var subject = cleanIdea(idea) || 'a little moon garden';
     var title = sentenceCase(subject);
+    var seed = Date.now() + Math.floor(Math.random() * 99999);
+    var touches = ['a ribbed shell', 'a warm pebble', 'a soft feather', 'a tiny wooden key', 'a bumpy leaf'];
+    var sounds = ['a bell under the grass', 'rain tapping on a roof', 'a sleepy drum inside a tree', 'little wings brushing the air', 'a friendly knock'];
+    var places = ['beside a mossy gate', 'under a blanket of clouds', 'near a sleepy river', 'inside a whispering garden', 'on a path of round stones'];
+    var friends = ['a snail with velvet horns', 'a mouse with a paper hat', 'a bird with warm feet', 'a fox with a gentle tail', 'a child with brave hands'];
+    var i = seed % touches.length, j = Math.floor(seed / 3) % sounds.length, k = Math.floor(seed / 7) % places.length, q = Math.floor(seed / 11) % friends.length;
     return [
-      title + ' woke under a soft blanket of morning quiet, while the floor felt cool and kind beneath small careful steps.',
-      'A tiny sound called from far away: tap, tap, tap, like friendly rain on a window.',
-      'The child followed it with brave hands, finding a round stone, a warm leaf, and a door that hummed gently.',
-      'Behind the door, the air smelled sweet and the path rose in little bumps, easy to follow with fingertips.',
-      'At the end, someone whispered, “You found the secret because you listened.”',
-      'So the child smiled, held the warm leaf close, and carried the quiet magic home for bedtime.'
-    ].join(' ');
+      title + ' began ' + places[k] + ', feeling ' + touches[i] + ' and listening to ' + sounds[j] + '.',
+      'Then ' + friends[q] + ' arrived with a small worry, so they followed the safest bumps with careful fingertips.',
+      'At the end, the worry became a cozy laugh, and the warm path guided everyone softly home.'
+    ].join('\n\n');
   }
 
   function italianStory(idea) {
     var subject = cleanIdea(idea) || 'un piccolo giardino della luna';
     var title = sentenceCase(subject);
+    var seed = Date.now() + Math.floor(Math.random() * 99999);
+    var touches = ['una conchiglia rigata', 'un sassolino tiepido', 'una piuma morbida', 'una piccola chiave di legno', 'una foglia piena di rilievi'];
+    var sounds = ['un campanello sotto l’erba', 'la pioggia sul tetto', 'un tamburo addormentato dentro un albero', 'ali leggere nell’aria', 'un colpetto gentile'];
+    var places = ['accanto a un cancello di muschio', 'sotto una coperta di nuvole', 'vicino a un fiume tranquillo', 'in un giardino che sussurra', 'su un sentiero di pietre tonde'];
+    var friends = ['una lumaca dalle corna vellutate', 'un topolino con un cappello di carta', 'un uccellino dai piedini caldi', 'una volpe dalla coda gentile', 'una bambina dalle mani coraggiose'];
+    var i = seed % touches.length, j = Math.floor(seed / 3) % sounds.length, k = Math.floor(seed / 7) % places.length, q = Math.floor(seed / 11) % friends.length;
     return [
-      title + ' si svegliò in un mattino morbido, quando il pavimento era fresco e gentile sotto passi piccoli e attenti.',
-      'Da lontano arrivò un suono leggero: toc, toc, toc, come pioggia amica sopra una finestra.',
-      'La bambina lo seguì con mani coraggiose, trovando una pietra liscia, una foglia tiepida e una porticina che vibrava piano.',
-      'Dietro la porta, l’aria profumava di dolce e il sentiero saliva in piccoli rilievi, facili da seguire con le dita.',
-      'Alla fine, una voce sussurrò: “Hai trovato il segreto perché hai saputo ascoltare.”',
-      'Così la bambina sorrise, strinse la foglia calda e portò a casa quella magia silenziosa per la notte.'
-    ].join(' ');
+      title + ' cominciò ' + places[k] + ', toccando ' + touches[i] + ' e ascoltando ' + sounds[j] + '.',
+      'Poi arrivò ' + friends[q] + ' con una piccola preoccupazione, e insieme seguirono i rilievi più sicuri.',
+      'Alla fine la preoccupazione diventò una risata calda, e il sentiero li accompagnò piano verso casa.'
+    ].join('\n\n');
   }
 
   window.TACT.webgpuSupported = true;
   window.TACT.generateStory = function (prompt, lang, onProgress) {
     if (onProgress) onProgress(0.1, 'writing', 'agnes', true);
-    return fetch('/api/generate-story', {
+    return fetch('/api/generate-story?nonce=' + Date.now() + '-' + Math.random().toString(36).slice(2), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
       body: JSON.stringify({ prompt: prompt || '', lang: lang || 'en' })
     }).then(function (res) {
       if (!res.ok) throw new Error('agnes-http-' + res.status);
