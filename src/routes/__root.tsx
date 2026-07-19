@@ -88,10 +88,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         property: "og:description",
         content:
-          "Turn a sentence into Grade 1 Braille and a printable 3D page, entirely client-side.",
+          "In-browser Grade 1 Braille translation (Italian/English) and printable STL 3D page, ported from thatsfaso/tact.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Tact — Braille + STL demo" },
+      { name: "twitter:description", content: "In-browser Grade 1 Braille translation (Italian/English) and printable STL 3D page, ported from thatsfaso/tact." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c283c9c5-4c14-4c29-91be-f2dca2011fc8/id-preview-bd658da1--4db516e3-3243-435b-a034-235f23b76521.lovable.app-1784430072750.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c283c9c5-4c14-4c29-91be-f2dca2011fc8/id-preview-bd658da1--4db516e3-3243-435b-a034-235f23b76521.lovable.app-1784430072750.png" },
     ],
     links: [
       {
