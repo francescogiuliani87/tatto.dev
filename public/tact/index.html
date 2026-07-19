@@ -244,17 +244,18 @@
 
 <!-- ─── Decorative side foliage (pictograms) ────────────────────────────── -->
 <style>
-  #tact-foliage{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
-  #tact-foliage svg{position:absolute;color:#0a0a0c;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round;opacity:.14;filter:drop-shadow(0 1px 0 rgba(255,255,255,.35));animation:tact-foliage-float 14s ease-in-out infinite}
-  #tact-foliage svg.solid{fill:currentColor;stroke:none;opacity:.10}
+  #tact-foliage{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden;mix-blend-mode:multiply}
+  #tact-foliage svg{position:absolute;color:#0a0a0c;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.32;animation:tact-foliage-float 14s ease-in-out infinite}
+  #tact-foliage svg.solid{fill:currentColor;stroke:none;opacity:.22}
   #tact-foliage .f-l{left:clamp(-6px,1.4vw,26px)}
   #tact-foliage .f-r{right:clamp(-6px,1.4vw,26px)}
-  #tact-foliage .p1{top:6vh;width:78px;animation-delay:-1s}
-  #tact-foliage .p2{top:22vh;width:54px;animation-delay:-4s;opacity:.10}
-  #tact-foliage .p3{top:40vh;width:96px;animation-delay:-2s}
-  #tact-foliage .p4{top:58vh;width:60px;animation-delay:-6s;opacity:.11}
-  #tact-foliage .p5{top:76vh;width:84px;animation-delay:-3s}
-  #tact-foliage .p6{top:90vh;width:48px;animation-delay:-5s;opacity:.10}
+  #tact-foliage .p1{top:6vh;width:88px;animation-delay:-1s}
+  #tact-foliage .p2{top:22vh;width:60px;animation-delay:-4s;opacity:.24}
+  #tact-foliage .p3{top:40vh;width:104px;animation-delay:-2s}
+  #tact-foliage .p4{top:58vh;width:66px;animation-delay:-6s;opacity:.26}
+  #tact-foliage .p5{top:76vh;width:92px;animation-delay:-3s}
+  #tact-foliage .p6{top:90vh;width:54px;animation-delay:-5s;opacity:.22}
+
   @keyframes tact-foliage-float{
     0%,100%{transform:translateY(0) rotate(var(--r,0deg))}
     50%{transform:translateY(-8px) rotate(calc(var(--r,0deg) + 2deg))}
