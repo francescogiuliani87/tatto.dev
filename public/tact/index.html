@@ -245,13 +245,10 @@
 <!-- ─── Decorative side foxes (realistic, looking at each other) ────────── -->
 <style>
   #tact-foxes{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
-  #tact-foxes img{position:fixed;bottom:0;height:min(88vh,900px);width:auto;opacity:.92;filter:drop-shadow(0 22px 40px rgba(20,10,0,.18));animation:tact-fox-breathe 7s ease-in-out infinite}
+  #tact-foxes img{position:fixed;bottom:0;height:min(88vh,900px);width:auto;opacity:.92;filter:drop-shadow(0 22px 40px rgba(20,10,0,.18))}
   #tact-foxes .fox-left{left:clamp(-40px,-2vw,0px)}
-  #tact-foxes .fox-right{right:clamp(-40px,-2vw,0px);animation-delay:-3s}
-  @keyframes tact-fox-breathe{
-    0%,100%{transform:translateY(0)}
-    50%{transform:translateY(-6px)}
-  }
+  #tact-foxes .fox-right{right:clamp(-40px,-2vw,0px)}
+
   @media (max-width:1280px){ #tact-foxes img{height:min(70vh,680px);opacity:.85} }
   @media (max-width:1024px){ #tact-foxes img{height:min(55vh,520px);opacity:.65} }
   @media (max-width:768px){ #tact-foxes img{height:38vh;opacity:.35} }
