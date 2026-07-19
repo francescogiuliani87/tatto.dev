@@ -928,5 +928,222 @@ window.TACT = (function () {
   if (reduceMotion && reduceMotion.addEventListener) reduceMotion.addEventListener('change', () => document.querySelectorAll('.drift').forEach(startAnimation));
 })();
 </script>
+<!-- ─── Hamburger menu + How it works panel ──────────────────────────────── -->
+<style>
+  #tact-menu-btn{
+    position:fixed;top:18px;right:18px;z-index:60;
+    width:44px;height:44px;display:grid;place-items:center;
+    background:rgba(255,255,255,.72);backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border:1px solid rgba(0,0,0,.12);border-radius:14px;
+    cursor:pointer;transition:transform .2s ease, background .2s ease;
+  }
+  #tact-menu-btn:hover{background:rgba(255,255,255,.92);transform:translateY(-1px)}
+  #tact-menu-btn span{
+    display:block;width:18px;height:1.5px;background:#0a0a0c;
+    margin:2.5px 0;border-radius:2px;transition:transform .25s ease, opacity .2s ease;
+  }
+  #tact-menu-btn.open span:nth-child(1){transform:translateY(4px) rotate(45deg)}
+  #tact-menu-btn.open span:nth-child(2){opacity:0}
+  #tact-menu-btn.open span:nth-child(3){transform:translateY(-4px) rotate(-45deg)}
+
+  #tact-menu-overlay{
+    position:fixed;inset:0;z-index:55;background:rgba(20,18,16,.35);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    opacity:0;pointer-events:none;transition:opacity .3s ease;
+  }
+  #tact-menu-overlay.open{opacity:1;pointer-events:auto}
+
+  #tact-menu-panel{
+    position:fixed;top:0;right:0;z-index:58;height:100svh;
+    width:min(560px,100vw);
+    background:#f4efe6;color:#0a0a0c;
+    transform:translateX(100%);transition:transform .38s cubic-bezier(.2,.7,.2,1);
+    overflow-y:auto;overflow-x:hidden;
+    box-shadow:-20px 0 60px rgba(0,0,0,.18);
+    font-family:'Geist',ui-sans-serif,system-ui,sans-serif;
+  }
+  #tact-menu-panel.open{transform:translateX(0)}
+  #tact-menu-panel .tm-inner{padding:72px 40px 64px;max-width:520px;margin:0 auto}
+  @media (max-width:640px){ #tact-menu-panel .tm-inner{padding:64px 26px 48px} }
+
+  #tact-menu-panel h1{
+    font-family:'Instrument Serif',ui-serif,Georgia,serif;
+    font-weight:400;font-size:44px;line-height:1;letter-spacing:-.02em;
+    margin-bottom:6px;
+  }
+  #tact-menu-panel .tm-sub{font-size:13px;letter-spacing:.14em;text-transform:uppercase;opacity:.55;margin-bottom:28px}
+  #tact-menu-panel h2{
+    font-family:'Instrument Serif',ui-serif,Georgia,serif;
+    font-weight:400;font-size:22px;line-height:1.15;margin:0 0 6px;
+  }
+  #tact-menu-panel p{font-size:15px;line-height:1.6;opacity:.82}
+  #tact-menu-panel .tm-step{display:grid;grid-template-columns:96px 1fr;gap:20px;align-items:start;padding:22px 0;border-top:1px solid rgba(10,10,12,.12)}
+  #tact-menu-panel .tm-step:last-child{border-bottom:1px solid rgba(10,10,12,.12)}
+  #tact-menu-panel .tm-num{
+    font-family:'Instrument Serif',ui-serif,Georgia,serif;
+    font-size:34px;opacity:.35;line-height:1;margin-top:2px;
+  }
+  #tact-menu-panel .tm-illus{
+    width:100%;aspect-ratio:1;background:#e8e0d3;border:1px solid rgba(10,10,12,.14);
+    border-radius:14px;display:grid;place-items:center;margin:14px 0 20px;overflow:hidden;
+  }
+  #tact-menu-panel .tm-illus svg{width:70%;height:70%;color:#0a0a0c}
+  #tact-menu-panel .tm-hero{
+    aspect-ratio:16/9;background:#0a0a0c;color:#f4efe6;
+    display:grid;place-items:center;border-radius:14px;margin:0 0 26px;position:relative;overflow:hidden;
+  }
+  #tact-menu-panel .tm-hero svg{width:60%;height:60%}
+  #tact-menu-panel .tm-lang{
+    display:inline-flex;gap:0;border:1px solid rgba(10,10,12,.2);
+    border-radius:999px;padding:3px;margin-bottom:26px;background:#fff;
+  }
+  #tact-menu-panel .tm-lang button{
+    font:inherit;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    padding:6px 14px;border-radius:999px;cursor:pointer;background:transparent;color:#0a0a0c;opacity:.55;
+  }
+  #tact-menu-panel .tm-lang button.active{background:#0a0a0c;color:#f4efe6;opacity:1}
+  #tact-menu-panel .tm-foot{margin-top:32px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.5}
+  #tact-menu-panel [data-lang="it"]{display:none}
+  #tact-menu-panel.lang-it [data-lang="en"]{display:none}
+  #tact-menu-panel.lang-it [data-lang="it"]{display:block}
+  #tact-menu-panel.lang-it .tm-lang [data-lang="en"]{display:inline-flex}
+</style>
+
+<button id="tact-menu-btn" aria-label="Menu" aria-expanded="false">
+  <span></span><span></span><span></span>
+</button>
+<div id="tact-menu-overlay"></div>
+<aside id="tact-menu-panel" aria-hidden="true" role="dialog" aria-label="How Tact works">
+  <div class="tm-inner">
+    <div class="tm-lang" role="tablist">
+      <button type="button" data-set-lang="en" class="active">EN</button>
+      <button type="button" data-set-lang="it">IT</button>
+    </div>
+
+    <div data-lang="en">
+      <div class="tm-sub">How it works</div>
+      <h1>Stories you can touch.</h1>
+      <p style="margin-top:14px">Tact turns short bedtime stories into printable tactile pages: Braille text and raised illustrations designed for blind and low‑vision children.</p>
+
+      <div class="tm-hero" aria-hidden="true">
+        <!-- monochrome hero: hand + braille dots -->
+        <svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="30" cy="40" r="3.2" fill="currentColor"/><circle cx="30" cy="60" r="3.2" fill="currentColor"/><circle cx="30" cy="80" r="3.2" fill="currentColor"/>
+          <circle cx="50" cy="40" r="3.2" fill="currentColor"/><circle cx="50" cy="80" r="3.2" fill="currentColor"/>
+          <circle cx="70" cy="60" r="3.2" fill="currentColor"/><circle cx="70" cy="80" r="3.2" fill="currentColor"/>
+          <path d="M110 90 q4 -22 14 -34 q6 -8 6 -20 q0 -6 6 -6 q6 0 6 8 v22 h6 q6 0 6 6 v8 q0 4 -2 8 l-6 12 q-3 6 -10 6 h-20 q-6 0 -6 -10 z"/>
+        </svg>
+      </div>
+
+      <div class="tm-step">
+        <div class="tm-num">01</div>
+        <div>
+          <h2>Pick or write a story</h2>
+          <p>Choose one of the demo prompts drifting on the home page, or type your own. Small on‑device AI writes a three‑page story around it.</p>
+        </div>
+      </div>
+      <div class="tm-step">
+        <div class="tm-num">02</div>
+        <div>
+          <h2>Automatic Braille</h2>
+          <p>Every page is translated into Grade 1 Braille (English or Italian) with capital and number indicators, ready to be embossed.</p>
+        </div>
+      </div>
+      <div class="tm-step">
+        <div class="tm-num">03</div>
+        <div>
+          <h2>Tactile illustrations</h2>
+          <p>The AI picks simple silhouettes from a library of ~90 shapes — animals, nature, objects — and lays them out to match the scene.</p>
+        </div>
+      </div>
+      <div class="tm-step">
+        <div class="tm-num">04</div>
+        <div>
+          <h2>Download a 3D‑printable STL</h2>
+          <p>Each page becomes a Marburg‑Medium standard STL: raised dots, raised outlines, flat back. Print it, feel the story.</p>
+        </div>
+      </div>
+
+      <div class="tm-foot">Tact — a tactile storytelling tool.</div>
+    </div>
+
+    <div data-lang="it">
+      <div class="tm-sub">Come funziona</div>
+      <h1>Storie che si toccano.</h1>
+      <p style="margin-top:14px">Tact trasforma brevi favole in pagine tattili stampabili: testo in Braille e illustrazioni in rilievo pensate per bambini ciechi e ipovedenti.</p>
+
+      <div class="tm-hero" aria-hidden="true">
+        <svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="1.6">
+          <circle cx="30" cy="40" r="3.2" fill="currentColor"/><circle cx="30" cy="60" r="3.2" fill="currentColor"/><circle cx="30" cy="80" r="3.2" fill="currentColor"/>
+          <circle cx="50" cy="40" r="3.2" fill="currentColor"/><circle cx="50" cy="80" r="3.2" fill="currentColor"/>
+          <circle cx="70" cy="60" r="3.2" fill="currentColor"/><circle cx="70" cy="80" r="3.2" fill="currentColor"/>
+          <path d="M110 90 q4 -22 14 -34 q6 -8 6 -20 q0 -6 6 -6 q6 0 6 8 v22 h6 q6 0 6 6 v8 q0 4 -2 8 l-6 12 q-3 6 -10 6 h-20 q-6 0 -6 -10 z"/>
+        </svg>
+      </div>
+
+      <div class="tm-step">
+        <div class="tm-num">01</div>
+        <div>
+          <h2>Scegli o scrivi una storia</h2>
+          <p>Scegli uno dei titoli che scorrono in home, oppure scrivi il tuo. Un piccolo modello AI, in locale sul tuo dispositivo, costruisce una storia in tre pagine.</p>
+        </div>
+      </div>
+      <div class="tm-step">
+        <div class="tm-num">02</div>
+        <div>
+          <h2>Braille automatico</h2>
+          <p>Ogni pagina viene tradotta in Braille di primo grado (italiano o inglese), con indicatori di maiuscola e numero, pronta per essere stampata in rilievo.</p>
+        </div>
+      </div>
+      <div class="tm-step">
+        <div class="tm-num">03</div>
+        <div>
+          <h2>Illustrazioni tattili</h2>
+          <p>L'AI sceglie silhouette essenziali da una libreria di circa 90 forme — animali, natura, oggetti — e le dispone per raccontare la scena.</p>
+        </div>
+      </div>
+      <div class="tm-step">
+        <div class="tm-num">04</div>
+        <div>
+          <h2>Scarica lo STL 3D</h2>
+          <p>Ogni pagina diventa un file STL secondo lo standard Marburg Medium: puntini in rilievo, contorni sollevati, retro piatto. Stampa e tocca la storia.</p>
+        </div>
+      </div>
+
+      <div class="tm-foot">Tact — uno strumento di narrazione tattile.</div>
+    </div>
+  </div>
+</aside>
+
+<script>
+(function(){
+  var btn=document.getElementById('tact-menu-btn');
+  var panel=document.getElementById('tact-menu-panel');
+  var ov=document.getElementById('tact-menu-overlay');
+  function set(open){
+    btn.classList.toggle('open',open);
+    panel.classList.toggle('open',open);
+    ov.classList.toggle('open',open);
+    btn.setAttribute('aria-expanded',open?'true':'false');
+    panel.setAttribute('aria-hidden',open?'false':'true');
+    document.body.style.overflow=open?'hidden':'';
+  }
+  btn.addEventListener('click',function(){set(!panel.classList.contains('open'))});
+  ov.addEventListener('click',function(){set(false)});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')set(false)});
+  panel.querySelectorAll('[data-set-lang]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var l=b.getAttribute('data-set-lang');
+      panel.classList.toggle('lang-it',l==='it');
+      panel.querySelectorAll('.tm-lang button').forEach(function(x){x.classList.toggle('active',x===b)});
+    });
+  });
+  // default language: match browser
+  if((navigator.language||'').toLowerCase().indexOf('it')===0){
+    panel.querySelector('[data-set-lang="it"]').click();
+  }
+})();
+</script>
 </body>
 </html>
