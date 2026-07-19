@@ -535,11 +535,12 @@ window.TACT = (function () {
       for (var k = 0; k < MODEL_TIERS.length; k++)
         if (MODEL_TIERS[k].id === _preferredModelId) return k;
     }
-    var dev = navigator.deviceMemory || 4;
-    if (dev <= 2) return 4;        // very low memory → 1B
-    if (dev <= 4) return 3;        // modest → Gemma 2B
-    return 2;                      // 8GB+ (the common cap) → 3B
+    // Default to the SMALLEST model (1B, ~0.7GB). Larger tiers on click were
+    // freezing low-end browsers during download + WebGPU shader compilation.
+    // Users can still manually opt into bigger models via setPreferredModel.
+    return MODEL_TIERS.length - 1;
   }
+
 
   // Probe the adapter to DEMOTE (never auto-promote) when the GPU is clearly
   // weak. A genuinely small maxBufferSize means even mid models won't fit, so we
