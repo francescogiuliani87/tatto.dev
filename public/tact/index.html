@@ -1220,10 +1220,7 @@ window.TACT = (function () {
     if(findHeaderLangBtn('en')){ syncFromHeader(); clearInterval(iv); }
     else if(tries>40){ clearInterval(iv); }
   },250);
-  // default language: match browser only if header not yet available
-  if((navigator.language||'').toLowerCase().indexOf('it')===0){
-    applyLang('it');
-  }
+  // no browser-based default: menu language is driven by the header toggle
 })();
 </script>
 </body>
