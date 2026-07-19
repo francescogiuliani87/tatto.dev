@@ -734,16 +734,40 @@ window.TACT = (function () {
     ].join('\n\n');
   }
 
+  function ensureWritingOverlay() {
+    var existing = document.getElementById('tact-writing-overlay');
+    if (existing) return existing;
+    var style = document.createElement('style');
+    style.textContent = '#tact-writing-overlay{position:fixed;inset:0;z-index:65;display:flex;align-items:center;justify-content:center;background:rgba(244,239,230,.86);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);opacity:0;pointer-events:none;transition:opacity .18s ease;color:#0a0a0c}#tact-writing-overlay.open{opacity:1;pointer-events:auto}#tact-writing-overlay .tw-card{width:min(420px,calc(100vw - 44px));display:flex;flex-direction:column;align-items:center;text-align:center;gap:18px}#tact-writing-overlay .tw-mark{width:78px;height:78px;border-radius:999px;border:1px solid rgba(10,10,12,.16);display:grid;place-items:center;background:rgba(250,250,247,.45);box-shadow:0 20px 55px rgba(10,10,12,.10)}#tact-writing-overlay .tw-mark:before{content:"";width:34px;height:34px;border-radius:999px;border:2px solid rgba(10,10,12,.18);border-top-color:#0a0a0c;animation:tactWritingSpin .9s linear infinite}#tact-writing-overlay .tw-title{font-family:Instrument Serif,Georgia,serif;font-size:clamp(34px,7vw,50px);line-height:1;font-weight:400}#tact-writing-overlay .tw-text{font-family:Geist,system-ui,sans-serif;font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.58}#tact-writing-overlay .tw-bar{width:100%;height:7px;border-radius:999px;background:rgba(10,10,12,.10);overflow:hidden}#tact-writing-overlay .tw-fill{height:100%;width:4%;border-radius:999px;background:#0a0a0c;transition:width .22s ease}@keyframes tactWritingSpin{to{transform:rotate(360deg)}}';
+    document.head.appendChild(style);
+    var overlay = document.createElement('div');
+    overlay.id = 'tact-writing-overlay';
+    overlay.innerHTML = '<div class="tw-card"><div class="tw-mark"></div><div><div class="tw-title"></div><div class="tw-text"></div></div><div class="tw-bar"><div class="tw-fill"></div></div></div>';
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function setWritingOverlay(open, progress, lang) {
+    var overlay = ensureWritingOverlay();
+    var isIt = lang === 'it';
+    overlay.querySelector('.tw-title').textContent = isIt ? 'Sto scrivendo la storia…' : 'Writing your story…';
+    overlay.querySelector('.tw-text').textContent = isIt ? 'Elaborazione in corso' : 'Working on it';
+    overlay.querySelector('.tw-fill').style.width = Math.max(4, Math.min(99, Math.round((progress || 0.04) * 100))) + '%';
+    overlay.classList.toggle('open', !!open);
+  }
+
   window.TACT.webgpuSupported = true;
   window.TACT.generateStory = function (prompt, lang, onProgress) {
     var started = Date.now();
     var p = 0.04;
     // Kick off a smooth simulated progress bar so the user sees advancement
     // while Agnes writes the story (typical duration 3-8s).
+    setWritingOverlay(true, p, lang);
     if (onProgress) onProgress(p, 'writing', 'writing', false);
     var ticker = setInterval(function () {
       // Ease toward 0.92, never quite reach 1 until the fetch resolves.
       p = p + (0.92 - p) * 0.08;
+      setWritingOverlay(true, Math.min(0.92, p), lang);
       if (onProgress) onProgress(Math.min(0.92, p), 'writing', 'writing', false);
     }, 220);
     var stop = function () { clearInterval(ticker); };
@@ -759,11 +783,13 @@ window.TACT = (function () {
       var story = (data && data.story) ? String(data.story).trim() : '';
       if (!story) throw new Error('agnes-empty');
       stop();
+      setWritingOverlay(true, 0.99, lang);
       if (onProgress) onProgress(0.99, 'writing', 'writing', false);
       var wait = Math.max(0, 700 - (Date.now() - started));
-      return new Promise(function (r) { setTimeout(function () { r(story); }, wait); });
+      return new Promise(function (r) { setTimeout(function () { setWritingOverlay(false, 1, lang); r(story); }, wait); });
     }).catch(function (err) {
       stop();
+      setWritingOverlay(false, 1, lang);
       console.warn('[TACT] Agnes failed, fallback to local:', err);
       return lang === 'it' ? italianStory(prompt) : englishStory(prompt);
     });
