@@ -905,12 +905,35 @@ window.TACT = (function () {
   const resizeObservers = new WeakMap();
 
   function loopWidthFor(track) {
+    const baseCount = Number(track.dataset.tactBaseCount || 0);
     const children = Array.from(track.children);
-    const halfway = Math.floor(children.length / 2);
-    if (children[halfway] && children[0]) {
-      return Math.max(1, children[halfway].offsetLeft - children[0].offsetLeft);
+    const pivot = baseCount || Math.floor(children.length / 2);
+    if (children[pivot] && children[0]) {
+      return Math.max(1, children[pivot].offsetLeft - children[0].offsetLeft);
     }
     return Math.max(1, track.scrollWidth / 2);
+  }
+
+  function ensureCopies(track) {
+    if (!track.dataset.tactBaseCount) {
+      track.dataset.tactBaseCount = Math.max(1, Math.floor(track.children.length / 2));
+    }
+
+    const baseCount = Number(track.dataset.tactBaseCount);
+    const originals = Array.from(track.children).slice(0, baseCount);
+    const groupWidth = loopWidthFor(track);
+    const visibleWidth = track.parentElement ? track.parentElement.clientWidth : window.innerWidth;
+    const minWidth = visibleWidth + groupWidth * 2;
+
+    while (track.scrollWidth < minWidth) {
+      originals.forEach((child) => {
+        const clone = child.cloneNode(true);
+        clone.dataset.tactClone = 'true';
+        clone.setAttribute('aria-hidden', 'true');
+        clone.tabIndex = -1;
+        track.appendChild(clone);
+      });
+    }
   }
 
   function startAnimation(track) {
@@ -922,6 +945,7 @@ window.TACT = (function () {
       return;
     }
 
+    ensureCopies(track);
     const loopWidth = loopWidthFor(track);
     const duration = Math.max(850, Math.round((loopWidth / SPEED) * 1000));
     track.style.transform = 'translate3d(0,0,0)';
