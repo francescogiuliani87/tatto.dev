@@ -251,6 +251,30 @@
 
   @media (max-width:1280px){ #tact-foxes{display:none} }
 
+  /* --- Reader responsive fix (mobile/tablet) --- */
+  @media (max-width:900px){
+    /* Stack braille page + text vertically */
+    .grid.grid-cols-12{grid-template-columns:1fr !important;gap:1.25rem !important;padding:0 4px}
+    .grid.grid-cols-12 > .col-span-7,
+    .grid.grid-cols-12 > .col-span-5{grid-column:1 / -1 !important}
+    /* Reduce big top spacing pushed via mt-24 on reader */
+    .mt-24{margin-top:calc(var(--spacing) * 10) !important}
+    /* Braille page: cap width so it doesn't overflow */
+    .grid.grid-cols-12 > .col-span-7 > div{max-width:min(92vw,460px) !important;transform:none !important}
+    /* Story text: comfortable size on mobile */
+    .grid.grid-cols-12 .serif{font-size:1.35rem !important;line-height:1.35 !important}
+    /* Action buttons wrap nicely */
+    .grid.grid-cols-12 .flex.flex-wrap{gap:.5rem !important}
+  }
+  @media (max-width:520px){
+    .grid.grid-cols-12{gap:1rem !important}
+    .grid.grid-cols-12 > .col-span-7 > div{max-width:94vw !important}
+    .grid.grid-cols-12 .serif{font-size:1.2rem !important}
+    /* Header padding tighter */
+    header.absolute{padding-left:1rem !important;padding-right:1rem !important}
+  }
+
+
 </style>
 <div id="tact-foxes" aria-hidden="true">
   <img class="fox-left" src="/tact/bear-left.png" alt=""/>
