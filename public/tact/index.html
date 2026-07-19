@@ -1212,18 +1212,29 @@ window.TACT = (function () {
     var current=panel.classList.contains('lang-it')?'it':'en';
     if(l!==current){ syncing=true; applyLang(l); syncing=false; }
   }
+  // Primary signal: intercept clicks on header EN/IT buttons
+  document.addEventListener('click',function(e){
+    var t=e.target && e.target.closest && e.target.closest('button');
+    if(!t) return;
+    if(panel.contains(t)) return;
+    var txt=(t.textContent||'').trim().toUpperCase();
+    if(txt!=='EN' && txt!=='IT') return;
+    // ensure it's the header lang button, not something else with same text
+    if(!t.closest('header') && !/lang|locale/i.test(t.className||'')) {
+      // still accept if it's short-text pill inside a small container
+      if((t.textContent||'').length>3) return;
+    }
+    syncing=true; applyLang(txt==='IT'?'it':'en'); syncing=false;
+  },true);
+  // Fallback observer for programmatic changes
   var mo=new MutationObserver(syncFromHeader);
   mo.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','aria-pressed','style'],childList:true});
-  // initial sync (retry until React mounts)
+  // Initial sync once header mounts
   var tries=0, iv=setInterval(function(){
     tries++;
     if(findHeaderLangBtn('en')){ syncFromHeader(); clearInterval(iv); }
     else if(tries>40){ clearInterval(iv); }
   },250);
-  // default language: match browser only if header not yet available
-  if((navigator.language||'').toLowerCase().indexOf('it')===0){
-    applyLang('it');
-  }
 })();
 </script>
 </body>
