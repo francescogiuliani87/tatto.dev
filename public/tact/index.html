@@ -249,23 +249,18 @@
   #tact-foliage svg.solid{fill:currentColor;stroke:none;opacity:.22}
   #tact-foliage .f-l{left:clamp(-6px,1.4vw,26px)}
   #tact-foliage .f-r{right:clamp(-6px,1.4vw,26px)}
-  #tact-foliage .p1{top:6vh;width:88px;animation-delay:-1s}
-  #tact-foliage .p2{top:22vh;width:60px;animation-delay:-4s;opacity:.24}
-  #tact-foliage .p3{top:40vh;width:104px;animation-delay:-2s}
-  #tact-foliage .p4{top:58vh;width:66px;animation-delay:-6s;opacity:.26}
-  #tact-foliage .p5{top:76vh;width:92px;animation-delay:-3s}
-  #tact-foliage .p6{top:90vh;width:54px;animation-delay:-5s;opacity:.22}
+  #tact-foliage .p1{top:6vh;width:120px;animation-delay:-1s}
+  #tact-foliage .p2{top:22vh;width:82px;animation-delay:-4s;opacity:.26}
+  #tact-foliage .p3{top:40vh;width:140px;animation-delay:-2s}
+  #tact-foliage .p4{top:58vh;width:110px;animation-delay:-6s;opacity:.28}
+  #tact-foliage .p5{top:76vh;width:130px;animation-delay:-3s}
+  #tact-foliage .p6{top:90vh;width:78px;animation-delay:-5s;opacity:.24}
 
   @keyframes tact-foliage-float{
     0%,100%{transform:translateY(0) rotate(var(--r,0deg))}
     50%{transform:translateY(-8px) rotate(calc(var(--r,0deg) + 2deg))}
   }
-  /* branches reaching toward the story input */
-  #tact-foliage .branch{position:absolute;top:36vh;width:min(32vw,360px);opacity:.36;animation:tact-foliage-float 16s ease-in-out infinite}
-  #tact-foliage .branch.b-l{left:0;transform-origin:left center}
-  #tact-foliage .branch.b-r{right:0;transform:scaleX(-1)}
-  #tact-foliage .branch.b2{top:58vh;width:min(26vw,300px);opacity:.28;animation-delay:-3s}
-  @media (max-width:900px){ #tact-foliage .p2,#tact-foliage .p4,#tact-foliage .p6{display:none} #tact-foliage svg{opacity:.10} #tact-foliage .branch{opacity:.20;width:min(40vw,260px)} }
+  @media (max-width:900px){ #tact-foliage .p2,#tact-foliage .p4,#tact-foliage .p6{display:none} #tact-foliage svg{opacity:.14} }
   @media (max-width:640px){ #tact-foliage{display:none} }
   @media (prefers-reduced-motion:reduce){ #tact-foliage svg{animation:none} }
 </style>
