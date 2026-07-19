@@ -63,9 +63,10 @@
     will-change: transform;
     backface-visibility: hidden;
     transform: translate3d(0, 0, 0);
+    transform-style: preserve-3d;
     width: max-content;
   }
-  .drift > * { flex: 0 0 auto; }
+  .drift > * { flex: 0 0 auto; transform: translateZ(0); }
   @media (prefers-reduced-motion: reduce) {
     .drift { transform: none !important; }
   }
@@ -349,7 +350,7 @@
 (function () {
   var canvas = document.getElementById("chrome-bg");
   if (!canvas) return;
-  var gl = canvas.getContext("webgl", { antialias: true, premultipliedAlpha: false });
+  var gl = canvas.getContext("webgl", { antialias: false, premultipliedAlpha: false, powerPreference: "low-power" });
   if (!gl) return;
 
   var vert = "\n    attribute vec2 a_pos;\n    void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }\n  ";
@@ -386,7 +387,7 @@
   });
 
   function resize() {
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var dpr = 1;
     canvas.width  = Math.floor(window.innerWidth  * dpr);
     canvas.height = Math.floor(window.innerHeight * dpr);
     canvas.style.width  = window.innerWidth  + "px";
@@ -404,9 +405,10 @@
     gl.uniform1f(u_time,  (performance.now() - start) / 1000);
     gl.uniform2f(u_mouse, mouse[0] * (window.devicePixelRatio || 1), mouse[1] * (window.devicePixelRatio || 1));
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-    requestAnimationFrame(frame);
   }
   frame();
+  window.addEventListener("resize", function() { resize(); frame(); }, { passive: true });
+  window.addEventListener("pointermove", function() { requestAnimationFrame(frame); }, { passive: true });
 })();
 </script>
 
@@ -894,43 +896,85 @@ window.TACT = (function () {
 </script>
 <script>
 (() => {
-  const SPEED = 0.48; // px/ms — RAF ticker: smoother and much faster than CSS marquee
-  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduceMotion) return;
+  const SPEED = 760; // px/s — compositor animation, fast and stable even when JS frames drop
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+  const animations = new WeakMap();
+  const resizeObservers = new WeakMap();
+
+  function loopWidthFor(track) {
+    const baseCount = Number(track.dataset.tactBaseCount || 0);
+    const children = Array.from(track.children);
+    const pivot = baseCount || Math.floor(children.length / 2);
+    if (children[pivot] && children[0]) {
+      return Math.max(1, children[pivot].offsetLeft - children[0].offsetLeft);
+    }
+    return Math.max(1, track.scrollWidth / 2);
+  }
+
+  function ensureCopies(track) {
+    if (!track.dataset.tactBaseCount) {
+      track.dataset.tactBaseCount = Math.max(1, Math.floor(track.children.length / 2));
+    }
+
+    const baseCount = Number(track.dataset.tactBaseCount);
+    const originals = Array.from(track.children).slice(0, baseCount);
+    const groupWidth = loopWidthFor(track);
+    const visibleWidth = track.parentElement ? track.parentElement.clientWidth : window.innerWidth;
+    const minGroups = 7;
+    const minWidth = Math.max(visibleWidth + groupWidth * 2, groupWidth * minGroups);
+
+    while (track.scrollWidth < minWidth) {
+      originals.forEach((child) => {
+        const clone = child.cloneNode(true);
+        clone.dataset.tactClone = 'true';
+        clone.setAttribute('aria-hidden', 'true');
+        clone.tabIndex = -1;
+        track.appendChild(clone);
+      });
+    }
+  }
+
+  function startAnimation(track) {
+    const previous = animations.get(track);
+    if (previous) previous.cancel();
+
+    if (reduceMotion && reduceMotion.matches) {
+      track.style.transform = 'none';
+      return;
+    }
+
+    ensureCopies(track);
+    const loopWidth = loopWidthFor(track);
+    const groups = Math.max(1, Math.floor(track.scrollWidth / loopWidth));
+    const loopsPerCycle = Math.max(1, Math.min(4, groups - 2));
+    const distance = loopWidth * loopsPerCycle;
+    const duration = Math.max(1200, Math.round((distance / SPEED) * 1000));
+    track.style.transform = 'translate3d(0,0,0)';
+
+    const animation = track.animate(
+      [
+        { transform: 'translate3d(0,0,0)' },
+        { transform: `translate3d(${-distance}px,0,0)` }
+      ],
+      { duration, iterations: Infinity, easing: 'linear' }
+    );
+    animations.set(track, animation);
+  }
 
   function bootTicker(track) {
     if (!track || track.dataset.tactTicker === 'on') return;
     track.dataset.tactTicker = 'on';
-    let offset = 0;
-    let loopWidth = 1;
-    let paused = false;
-    let last = performance.now();
-    let raf = 0;
 
-    const measure = () => {
-      const children = Array.from(track.children);
-      const halfway = Math.floor(children.length / 2);
-      loopWidth = children[halfway]
-        ? Math.max(1, children[halfway].offsetLeft - children[0].offsetLeft)
-        : Math.max(1, track.scrollWidth / 2);
-    };
+    track.addEventListener('pointerenter', () => animations.get(track)?.pause(), { passive: true });
+    track.addEventListener('pointerleave', () => animations.get(track)?.play(), { passive: true });
 
-    const tick = (now) => {
-      const delta = Math.min(48, now - last);
-      last = now;
-      if (!paused) {
-        offset = (offset + delta * SPEED) % loopWidth;
-        track.style.transform = `translate3d(${-offset}px,0,0)`;
-      }
-      raf = requestAnimationFrame(tick);
-    };
+    if ('ResizeObserver' in window) {
+      const observer = new ResizeObserver(() => startAnimation(track));
+      observer.observe(track);
+      resizeObservers.set(track, observer);
+    }
 
-    track.addEventListener('pointerenter', () => { paused = true; }, { passive: true });
-    track.addEventListener('pointerleave', () => { paused = false; last = performance.now(); }, { passive: true });
-    window.addEventListener('resize', measure, { passive: true });
-    measure();
-    requestAnimationFrame(measure);
-    raf = requestAnimationFrame(tick);
+    requestAnimationFrame(() => startAnimation(track));
   }
 
   function scan() {
@@ -939,6 +983,9 @@ window.TACT = (function () {
 
   scan();
   new MutationObserver(scan).observe(document.getElementById('root') || document.body, { childList: true, subtree: true });
+  window.addEventListener('resize', () => document.querySelectorAll('.drift').forEach(startAnimation), { passive: true });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => document.querySelectorAll('.drift').forEach(startAnimation));
+  if (reduceMotion && reduceMotion.addEventListener) reduceMotion.addEventListener('change', () => document.querySelectorAll('.drift').forEach(startAnimation));
 })();
 </script>
 </body>
