@@ -51,11 +51,12 @@ export const Route = createFileRoute('/api/public/generate-story')({
                 { role: 'system', content: system },
                 { role: 'user', content: user },
               ],
-              temperature: 1.1,
-              top_p: 0.97,
-              presence_penalty: 0.7,
-              frequency_penalty: 0.4,
-              max_tokens: 700,
+              temperature: 0.85,
+              top_p: 0.9,
+              presence_penalty: 0.3,
+              frequency_penalty: 0.5,
+              max_tokens: 520,
+              stop: ['\n\n\n'],
             }),
 
 
