@@ -206,10 +206,14 @@
       font-size: 15px !important;
     }
     /* Submit button (the pill on the right of input) — keep it compact */
-    #root main [class*="rounded-full"] button,
-    #root main button[type="submit"] {
-      white-space: nowrap;
+    #root main .btn {
+      padding: 8px 12px !important;
+      font-size: 12px !important;
+      flex-shrink: 0;
     }
+    /* Input row: make input shrinkable so button stays inside */
+    #root main input, #root main textarea { min-width: 0 !important; flex: 1 1 0 !important; }
+    #root main [class*="rounded-full"][class*="flex"] { flex-wrap: nowrap !important; }
     /* Marquee chips */
     #root .drift, #root [class*="drift"] { gap: 8px !important; }
     /* Footer text at bottom */
