@@ -736,10 +736,17 @@ window.TACT = (function () {
 
   window.TACT.webgpuSupported = true;
   window.TACT.generateStory = function (prompt, lang, onProgress) {
-    // Signal "writing" immediately (k>=1 clears the download bar and switches
-    // the status line to "Sto scrivendo la storia…" / "Writing your story…").
-    if (onProgress) onProgress(1, 'writing', '', true);
     var started = Date.now();
+    var p = 0.04;
+    // Kick off a smooth simulated progress bar so the user sees advancement
+    // while Agnes writes the story (typical duration 3-8s).
+    if (onProgress) onProgress(p, 'writing', 'writing', false);
+    var ticker = setInterval(function () {
+      // Ease toward 0.92, never quite reach 1 until the fetch resolves.
+      p = p + (0.92 - p) * 0.08;
+      if (onProgress) onProgress(Math.min(0.92, p), 'writing', 'writing', false);
+    }, 220);
+    var stop = function () { clearInterval(ticker); };
     return fetch('/api/public/generate-story?nonce=' + Date.now() + '-' + Math.random().toString(36).slice(2), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -751,14 +758,17 @@ window.TACT = (function () {
     }).then(function (data) {
       var story = (data && data.story) ? String(data.story).trim() : '';
       if (!story) throw new Error('agnes-empty');
-      // Keep the loading state visible at least 900ms so the user sees feedback.
-      var wait = Math.max(0, 900 - (Date.now() - started));
+      stop();
+      if (onProgress) onProgress(0.99, 'writing', 'writing', false);
+      var wait = Math.max(0, 700 - (Date.now() - started));
       return new Promise(function (r) { setTimeout(function () { r(story); }, wait); });
     }).catch(function (err) {
+      stop();
       console.warn('[TACT] Agnes failed, fallback to local:', err);
       return lang === 'it' ? italianStory(prompt) : englishStory(prompt);
     });
   };
+
 
 })();
 </script>
