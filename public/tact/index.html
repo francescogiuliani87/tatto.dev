@@ -1212,9 +1212,11 @@ window.TACT = (function () {
   #tact-menu-btn:hover span:nth-child(2){width:20px}
   @media (max-width:520px){
     header #tact-menu-btn::after,
-    #tact-menu-btn.in-header::after{ content:""; }
+    #tact-menu-btn.in-header::after{ content:none; display:none; }
     header #tact-menu-btn,
-    #tact-menu-btn.in-header{ width:36px;padding:0;justify-content:center; }
+    #tact-menu-btn.in-header{ width:36px;padding:0;gap:0;justify-content:center;align-items:center; }
+    header #tact-menu-btn .tm-bars,
+    #tact-menu-btn.in-header .tm-bars{ margin:0 auto; }
   }
   #tact-menu-btn.open{opacity:0;pointer-events:none;transform:scale(.85) rotate(-8deg)}
   #tact-menu-close{
