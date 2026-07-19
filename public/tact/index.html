@@ -875,6 +875,7 @@ window.TACT = (function () {
   }
 
   window.TACT.generateSTL=generateSTL;
+  window.TACT.rasterizeIll=rasterizeIll;
 
   // Even pages (pageNum 2,4,...) are text-only: full-width profile, no picture.
   // Odd pages carry the illustration from svgUrl in the L-shaped profile.
@@ -1326,6 +1327,258 @@ window.TACT = (function () {
     if(findHeaderLangBtn('en')){ syncFromHeader(); clearInterval(iv); }
     else if(tries>40){ clearInterval(iv); }
   },250);
+})();
+</script>
+
+<!-- ─── 3D STL Preview (Three.js) ─────────────────────────────────────────── -->
+<style>
+  #tact-3d-overlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(12,12,14,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);animation:t3d-fade .28s ease}
+  #tact-3d-overlay.open{display:flex}
+  @keyframes t3d-fade{from{opacity:0}to{opacity:1}}
+  #tact-3d-card{position:relative;width:min(94vw,880px);height:min(88vh,720px);background:linear-gradient(180deg,#faf9f4 0%,#f2eee2 100%);border-radius:22px;box-shadow:0 40px 120px -20px rgba(0,0,0,.55),0 0 0 1px rgba(10,10,12,.08) inset;overflow:hidden;display:flex;flex-direction:column;font-family:'Geist',system-ui,sans-serif;color:#0a0a0c}
+  #tact-3d-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px 12px;gap:12px;border-bottom:1px solid rgba(10,10,12,.06)}
+  #tact-3d-title{font-family:'Instrument Serif',serif;font-size:26px;line-height:1;letter-spacing:-.01em}
+  #tact-3d-sub{font-size:10.5px;text-transform:uppercase;letter-spacing:.22em;color:rgba(10,10,12,.5);margin-top:6px}
+  #tact-3d-close{width:38px;height:38px;border-radius:999px;background:rgba(250,250,247,.7);border:1px solid rgba(10,10,12,.1);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#0a0a0c;transition:transform .18s,background .18s}
+  #tact-3d-close:hover{background:#fff;transform:rotate(90deg)}
+  #tact-3d-canvas-wrap{flex:1;position:relative;background:radial-gradient(120% 90% at 50% 30%,#fdfcf6 0%,#eee7d4 55%,#d9d1ba 100%);overflow:hidden}
+  #tact-3d-canvas-wrap canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+  #tact-3d-canvas-wrap canvas:active{cursor:grabbing}
+  #tact-3d-hint{position:absolute;top:14px;left:14px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(10,10,12,.45);pointer-events:none;background:rgba(250,250,247,.6);padding:6px 10px;border-radius:999px;backdrop-filter:blur(6px)}
+  #tact-3d-stats{position:absolute;bottom:14px;left:14px;font-family:'Geist Mono','JetBrains Mono',ui-monospace,monospace;font-size:10.5px;letter-spacing:.08em;color:rgba(10,10,12,.55);background:rgba(250,250,247,.6);padding:8px 12px;border-radius:10px;backdrop-filter:blur(6px);line-height:1.5}
+  #tact-3d-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;color:#0a0a0c;font-family:'Instrument Serif',serif;font-size:22px;letter-spacing:-.01em}
+  #tact-3d-loading .spin{width:34px;height:34px;border-radius:50%;border:2px solid rgba(10,10,12,.15);border-top-color:#0a0a0c;animation:t3d-spin 1s linear infinite}
+  @keyframes t3d-spin{to{transform:rotate(360deg)}}
+  #tact-3d-actions{padding:14px 22px 20px;display:flex;gap:10px;align-items:center;justify-content:space-between;border-top:1px solid rgba(10,10,12,.06);background:rgba(250,250,247,.5)}
+  #tact-3d-actions .meta{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(10,10,12,.5)}
+  #tact-3d-actions .btns{display:flex;gap:8px}
+  .t3d-btn{font-family:'Geist',system-ui,sans-serif;font-size:13px;padding:10px 18px;border-radius:999px;border:1px solid rgba(10,10,12,.12);background:rgba(250,250,247,.85);cursor:pointer;color:#0a0a0c;letter-spacing:.02em;transition:background .16s,transform .12s}
+  .t3d-btn:hover{background:#fff}
+  .t3d-btn:active{transform:scale(.97)}
+  .t3d-btn.primary{background:#0a0a0c;color:#faf9f4;border-color:#0a0a0c}
+  .t3d-btn.primary:hover{background:#1a1a1e}
+  @media (max-width:640px){
+    #tact-3d-card{width:96vw;height:92vh;border-radius:18px}
+    #tact-3d-title{font-size:22px}
+    #tact-3d-actions{padding:12px 14px 16px;flex-direction:column;align-items:stretch;gap:10px}
+    #tact-3d-actions .btns{justify-content:flex-end}
+    #tact-3d-head{padding:14px 16px 10px}
+  }
+</style>
+<div id="tact-3d-overlay" role="dialog" aria-modal="true" aria-labelledby="tact-3d-title">
+  <div id="tact-3d-card">
+    <div id="tact-3d-head">
+      <div>
+        <div id="tact-3d-title">3D preview</div>
+        <div id="tact-3d-sub" data-i18n-sub>Rotate · zoom · inspect before printing</div>
+      </div>
+      <button id="tact-3d-close" aria-label="Close preview">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <div id="tact-3d-canvas-wrap">
+      <div id="tact-3d-hint" data-i18n-hint>Drag to rotate · scroll to zoom</div>
+      <div id="tact-3d-stats"></div>
+      <div id="tact-3d-loading"><div class="spin"></div><div data-i18n-loading>Preparing your page…</div></div>
+    </div>
+    <div id="tact-3d-actions">
+      <div class="meta" id="tact-3d-filemeta"></div>
+      <div class="btns">
+        <button class="t3d-btn" id="tact-3d-cancel" data-i18n-cancel>Close</button>
+        <button class="t3d-btn primary" id="tact-3d-download" data-i18n-dl>Download STL</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script type="module">
+(function(){
+  const I18N = {
+    en:{sub:"Rotate · zoom · inspect before printing",hint:"Drag to rotate · scroll to zoom",loading:"Preparing your page…",cancel:"Close",dl:"Download STL"},
+    it:{sub:"Ruota · zoom · ispeziona prima di stampare",hint:"Trascina per ruotare · scroll per zoom",loading:"Preparo la tua pagina…",cancel:"Chiudi",dl:"Scarica STL"}
+  };
+  function currentLang(){
+    try{
+      const btns=document.querySelectorAll('header button');
+      for(const b of btns){ const t=(b.textContent||'').trim().toLowerCase(); if(t==='it'||t==='italiano'){ if(b.getAttribute('aria-pressed')==='true'||/rgb\(10/.test(b.style.background||'')) return 'it'; } }
+    }catch(_){}
+    return (document.documentElement.lang||'en').startsWith('it')?'it':'en';
+  }
+  function applyI18n(){
+    const d=I18N[currentLang()]||I18N.en;
+    const q=(a,t)=>{const el=document.querySelector(a); if(el) el.textContent=t;};
+    q('[data-i18n-sub]',d.sub); q('[data-i18n-hint]',d.hint); q('[data-i18n-loading]',d.loading);
+    q('[data-i18n-cancel]',d.cancel); q('[data-i18n-dl]',d.dl);
+  }
+
+  let THREE_MOD=null, OrbitMod=null;
+  async function loadThree(){
+    if(THREE_MOD) return {THREE:THREE_MOD, OrbitControls:OrbitMod};
+    THREE_MOD = await import('https://esm.sh/three@0.160.0');
+    const oc = await import('https://esm.sh/three@0.160.0/examples/jsm/controls/OrbitControls.js');
+    OrbitMod = oc.OrbitControls;
+    return {THREE:THREE_MOD, OrbitControls:OrbitMod};
+  }
+
+  function parseBinarySTL(THREE, buf){
+    const dv = new DataView(buf);
+    const n = dv.getUint32(80, true);
+    const pos = new Float32Array(n*9);
+    const nrm = new Float32Array(n*9);
+    let o = 84;
+    for(let i=0;i<n;i++){
+      const nx=dv.getFloat32(o,true), ny=dv.getFloat32(o+4,true), nz=dv.getFloat32(o+8,true); o+=12;
+      for(let v=0;v<3;v++){
+        pos[i*9+v*3+0]=dv.getFloat32(o,true);
+        pos[i*9+v*3+1]=dv.getFloat32(o+4,true);
+        pos[i*9+v*3+2]=dv.getFloat32(o+8,true);
+        nrm[i*9+v*3+0]=nx; nrm[i*9+v*3+1]=ny; nrm[i*9+v*3+2]=nz;
+        o+=12;
+      }
+      o+=2;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    g.setAttribute('normal', new THREE.BufferAttribute(nrm,3));
+    return g;
+  }
+
+  let scene=null, camera=null, renderer=null, controls=null, currentGroup=null;
+  const wrap = document.getElementById('tact-3d-canvas-wrap');
+
+  async function initScene(){
+    const {THREE, OrbitControls} = await loadThree();
+    if(renderer) return {THREE};
+    scene = new THREE.Scene();
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    camera = new THREE.PerspectiveCamera(38, w/h, 0.1, 4000);
+    camera.position.set(180, 140, 240);
+    renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 2));
+    renderer.setSize(w, h);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    wrap.appendChild(renderer.domElement);
+
+    scene.add(new THREE.HemisphereLight(0xfff6dc, 0x6b6250, 0.85));
+    const key = new THREE.DirectionalLight(0xffffff, 1.15); key.position.set(120, 200, 160); scene.add(key);
+    const fill = new THREE.DirectionalLight(0xfff1c9, 0.4); fill.position.set(-140, 80, -60); scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xd8c48a, 0.35); rim.position.set(0, 60, -220); scene.add(rim);
+
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = 0.08;
+    controls.rotateSpeed = 0.9; controls.zoomSpeed = 0.8;
+    controls.minDistance = 60; controls.maxDistance = 800;
+
+    new ResizeObserver(()=>{
+      if(!renderer) return;
+      const W=wrap.clientWidth, H=wrap.clientHeight;
+      renderer.setSize(W,H); camera.aspect=W/H; camera.updateProjectionMatrix();
+    }).observe(wrap);
+
+    (function tick(){ requestAnimationFrame(tick); if(controls) controls.update(); if(renderer) renderer.render(scene, camera); })();
+    return {THREE};
+  }
+
+  async function showPreview(buf, filename, onConfirm){
+    document.getElementById('tact-3d-filemeta').textContent = filename + '  ·  ' + (buf.byteLength/1024).toFixed(1) + ' KB';
+    applyI18n();
+    const ov = document.getElementById('tact-3d-overlay');
+    ov.classList.add('open');
+    const loading = document.getElementById('tact-3d-loading');
+    loading.style.display = 'flex';
+
+    try{
+      const {THREE} = await initScene();
+      if(currentGroup){ scene.remove(currentGroup); currentGroup.traverse(o=>{ if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); }); currentGroup=null; }
+      const geo = parseBinarySTL(THREE, buf);
+      geo.computeVertexNormals();
+      // Center geometry at origin
+      geo.computeBoundingBox();
+      const bb = geo.boundingBox;
+      const cx = (bb.min.x+bb.max.x)/2, cy=(bb.min.y+bb.max.y)/2, cz=(bb.min.z+bb.max.z)/2;
+      geo.translate(-cx,-cy,-cz);
+
+      const mat = new THREE.MeshPhysicalMaterial({
+        color: 0xf5efe0, roughness: 0.55, metalness: 0.0,
+        clearcoat: 0.15, clearcoatRoughness: 0.5,
+        sheen: 0.2, sheenColor: 0xffe9b8
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      // page is on XY with tiny Z thickness. Tilt slightly for a nice 3/4 view.
+      const group = new THREE.Group();
+      group.add(mesh);
+      group.rotation.x = -Math.PI/2.4;
+      scene.add(group);
+      currentGroup = group;
+
+      // Frame it
+      const size = bb.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y);
+      const dist = maxDim / (2*Math.tan((camera.fov*Math.PI/180)/2)) * 1.35;
+      camera.position.set(dist*0.35, dist*0.75, dist*0.95);
+      controls.target.set(0,0,0);
+      camera.lookAt(0,0,0);
+      controls.update();
+
+      controls.autoRotate = true; controls.autoRotateSpeed = 0.9;
+      const stopSpin = ()=>{ controls.autoRotate=false; renderer.domElement.removeEventListener('pointerdown', stopSpin); };
+      renderer.domElement.addEventListener('pointerdown', stopSpin);
+
+      const tris = geo.attributes.position.count/3;
+      document.getElementById('tact-3d-stats').innerHTML =
+        '150 × 150 × 1.35 mm<br>'+tris.toLocaleString()+' triangles';
+
+      loading.style.display='none';
+    }catch(err){
+      console.error('[tact-3d] preview failed', err);
+      loading.innerHTML = '<div style="font-family:Geist,sans-serif;font-size:14px;color:#0a0a0c;text-align:center;max-width:340px;line-height:1.5">Couldn\u2019t load the 3D preview.<br><span style="opacity:.6;font-size:12px">Downloading STL directly…</span></div>';
+      setTimeout(()=>{ closeOverlay(); onConfirm(); }, 900);
+      return;
+    }
+
+    const dlBtn = document.getElementById('tact-3d-download');
+    const cancelBtn = document.getElementById('tact-3d-cancel');
+    const closeBtn = document.getElementById('tact-3d-close');
+    dlBtn.onclick = ()=>{ closeOverlay(); onConfirm(); };
+    cancelBtn.onclick = closeOverlay;
+    closeBtn.onclick = closeOverlay;
+    ov.onclick = (e)=>{ if(e.target===ov) closeOverlay(); };
+    document.addEventListener('keydown', escHandler);
+  }
+  function escHandler(e){ if(e.key==='Escape') closeOverlay(); }
+  function closeOverlay(){
+    document.getElementById('tact-3d-overlay').classList.remove('open');
+    document.removeEventListener('keydown', escHandler);
+    if(controls) controls.autoRotate=false;
+  }
+
+  function install(){
+    if(!window.TACT || !window.TACT.generateSTL){ return setTimeout(install, 120); }
+    const gen = window.TACT.generateSTL;
+    const rasterize = window.TACT.rasterizeIll || null;
+
+    window.TACT.downloadSTL = function(brailleCells, pageNum, slug, svgUrl){
+      const full = (pageNum % 2 === 0);
+      const filename = (slug||'tact')+'_page_'+String(pageNum).padStart(2,'0')+'.stl';
+      const build = (pil)=>{
+        const buf = gen(brailleCells, pageNum, slug, pil, full);
+        showPreview(buf, filename, ()=>{
+          const blob = new Blob([buf], {type:'application/octet-stream'});
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href=url; a.download=filename;
+          document.body.appendChild(a); a.click();
+          setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); },100);
+        });
+      };
+      if(svgUrl && !full && rasterize){
+        fetch(svgUrl).then(r=>r.ok?r.text():Promise.reject())
+          .then(txt=>rasterize(txt, build))
+          .catch(()=>build([]));
+      } else {
+        build([]);
+      }
+    };
+  }
+  install();
 })();
 </script>
 </body>
