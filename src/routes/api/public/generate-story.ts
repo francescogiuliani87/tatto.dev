@@ -116,9 +116,9 @@ Each paragraph: 2 sentences, 22-32 words. No title, no numbering, no headings. O
               max_tokens: 650,
               stop: ['\n\n\n'],
             }),
-
-
+            signal: AbortSignal.timeout(25_000),
           })
+
 
           if (!upstream.ok) {
             const text = await upstream.text().catch(() => '')
@@ -149,11 +149,14 @@ Each paragraph: 2 sentences, 22-32 words. No title, no numbering, no headings. O
             headers: { 'Content-Type': 'application/json', ...CORS },
           })
         } catch (err) {
+          const e = err as Error & { name?: string }
+          const isTimeout = e?.name === 'TimeoutError' || e?.name === 'AbortError'
           return new Response(
-            JSON.stringify({ error: (err as Error).message || 'Unknown error' }),
-            { status: 500, headers: { 'Content-Type': 'application/json', ...CORS } },
+            JSON.stringify({ error: isTimeout ? 'Agnes timeout' : e?.message || 'Unknown error' }),
+            { status: isTimeout ? 504 : 500, headers: { 'Content-Type': 'application/json', ...CORS } },
           )
         }
+
       },
     },
   },
