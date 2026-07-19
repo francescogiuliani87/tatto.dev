@@ -1401,6 +1401,22 @@ window.TACT = (function () {
 <script>
 (function(){
   var btn=document.getElementById('tact-menu-btn');
+  // Move the hamburger into the header's right control group (next to the language toggle)
+  function mount(){
+    var header=document.querySelector('header');
+    if(!header) return false;
+    // The header's last direct child is the right-side controls flex row
+    var groups=header.children;
+    var right=groups[groups.length-1];
+    if(!right || right.contains(btn)) return true;
+    right.appendChild(btn);
+    btn.classList.add('in-header');
+    return true;
+  }
+  if(!mount()){
+    var mo=new MutationObserver(function(){ if(mount()) mo.disconnect(); });
+    mo.observe(document.body,{childList:true,subtree:true});
+  }
   var panel=document.getElementById('tact-menu-panel');
   var ov=document.getElementById('tact-menu-overlay');
   function set(open){
