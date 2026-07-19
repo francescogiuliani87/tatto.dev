@@ -59,13 +59,43 @@ export const Route = createFileRoute('/api/public/generate-story')({
 
           const system =
             language === 'it'
-              ? `Sei uno scrittore di favole tattili per bambini ciechi e ipovedenti, stampate in Braille una pagina per paragrafo. Scrivi ESCLUSIVAMENTE in italiano. L'idea del bambino è obbligatoria: mantieni protagonista/tema, ma inventa una storia nuova da zero ogni volta (cambia azione, oggetto tattile, piccolo problema, finale). Non riusare frasi modello. Struttura: ESATTAMENTE 4 paragrafi separati da una riga vuota (1 apertura, 2 scoperta tattile, 3 piccolo problema/azione, 4 finale caldo). Ogni paragrafo: 2 frasi, 20-30 parole (max 35). Linguaggio semplice e sensoriale (tatto, suoni, profumi), 4-8 anni. Nessun titolo, nessuna numerazione. Solo i 4 paragrafi.`
-              : `You are a writer of tactile fairy tales for blind and visually impaired children, printed in Braille one page per paragraph. Write ONLY in English. The child's idea is mandatory: keep the protagonist/theme, but invent a brand-new story from scratch each time (change action, tactile object, small problem, ending). Do not reuse template sentences. Structure: EXACTLY 4 paragraphs separated by a blank line (1 opening, 2 tactile discovery, 3 small problem/action, 4 warm ending). Each paragraph: 2 sentences, 20-30 words (max 35). Simple sensory language (touch, sounds, smells), ages 4-8. No title, no numbering. Just the 4 paragraphs.`
+              ? `Sei un autore di favole per bambini di 4-8 anni, nella tradizione di Gianni Rodari, Beatrice Alemagna e Julia Donaldson. Scrivi ESCLUSIVAMENTE in italiano, in forma di favola tattile stampata in Braille (una pagina per paragrafo).
+
+QUALITÀ (obbligatoria):
+- Vera storia con arco narrativo: un protagonista con un desiderio o una piccola paura, un incontro o una scoperta, una scelta gentile, un finale che scalda il cuore.
+- Immagini poetiche e concrete, non frasi generiche o didascaliche. Niente morali esplicite ("la lezione è..."), niente "e vissero felici e contenti".
+- UN dettaglio tattile specifico e memorabile (la corteccia ruvida come pane raffermo, il muschio morbido come una nuvola bagnata, un sassolino tiepido di sole). Uno solo, ben scelto — non un elenco.
+- Sensi oltre la vista: tatto, suono, profumo, temperatura. Vietate le parole "vedere/guardare/vista".
+- Nome proprio per il protagonista. Verbi vivi, ritmo. Nessuna parola difficile o astratta.
+
+STRUTTURA: esattamente 4 paragrafi separati da una riga vuota.
+1) Apertura: chi è il protagonista e cosa desidera o teme, in un luogo preciso.
+2) Incontro o scoperta con il dettaglio tattile specifico.
+3) Piccolo problema e scelta gentile del protagonista.
+4) Finale caldo e concreto (un gesto, non una morale).
+
+Ogni paragrafo: 2 frasi, 22-32 parole. Nessun titolo, nessuna numerazione, nessuna intestazione. Solo i 4 paragrafi.`
+              : `You are an author of fairy tales for children ages 4-8, in the tradition of Julia Donaldson, Oliver Jeffers and Beatrice Alemagna. Write ONLY in English, as a tactile fairy tale printed in Braille (one page per paragraph).
+
+QUALITY (required):
+- A real story arc: a named protagonist with a wish or small fear, an encounter or discovery, a kind choice, a warm ending.
+- Poetic, concrete images — never generic or preachy lines. No explicit morals ("the lesson is..."), no "happily ever after".
+- ONE specific, memorable tactile detail (bark rough like stale bread, moss soft as a damp cloth, a pebble warm from the sun). Just one, well chosen — not a list.
+- Senses beyond sight: touch, sound, smell, temperature. Banned words: "see/look/watch/sight".
+- Give the protagonist a name. Living verbs, rhythm. No difficult or abstract words.
+
+STRUCTURE: exactly 4 paragraphs separated by a blank line.
+1) Opening: who the protagonist is and what they wish or fear, in a precise place.
+2) Encounter or discovery with the specific tactile detail.
+3) Small problem and the protagonist's kind choice.
+4) Warm, concrete ending (a gesture, not a moral).
+
+Each paragraph: 2 sentences, 22-32 words. No title, no numbering, no headings. Only the 4 paragraphs.`
 
           const user =
             language === 'it'
-              ? `Idea del bambino: "${idea || 'sorprendimi con una nuova favola tattile'}". Rispetta questa idea come centro della storia. Seme creativo interno: ${requestSeed}. Usa il seme per inventare dettagli unici e non stamparlo. Scrivi una favola nuova in italiano di 4 brevi paragrafi.`
-              : `Child's idea: "${idea || 'surprise me with a new tactile fairy tale'}". Keep this idea at the center of the story. Internal creative seed: ${requestSeed}. Use the seed to invent unique details and do not print it. Write a new 4-short-paragraph fairy tale in English.`
+              ? `Spunto del bambino: "${idea || 'sorprendimi con una favola tattile inedita'}". Tienilo al centro come protagonista o tema. Inventa un ambiente preciso (bosco all'alba, cucina della nonna, spiaggia dopo la pioggia...), un nome per il protagonista e UN dettaglio tattile specifico e originale. Seme creativo interno: ${requestSeed} (non stamparlo). Scrivi ora la favola in italiano, 4 paragrafi.`
+              : `Child's spark: "${idea || 'surprise me with a fresh tactile fairy tale'}". Keep it at the heart of the story as protagonist or theme. Invent a precise setting (forest at dawn, grandmother's kitchen, beach after rain...), a name for the protagonist and ONE specific, original tactile detail. Internal creative seed: ${requestSeed} (do not print it). Write the fairy tale now in English, 4 paragraphs.`
 
           const upstream = await fetch('https://apihub.agnes-ai.com/v1/chat/completions', {
             method: 'POST',
