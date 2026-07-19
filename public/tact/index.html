@@ -1074,6 +1074,11 @@ window.TACT = (function () {
     var tris=[];
     roundedSlab(tris,0,0,PAGE_W,PAGE_H,0,BASE_H,CORNER_R,8);
     var lines=layoutLines(brailleCells,widths);
+    if(lines.length>widths.length){
+      var lost=lines.length-widths.length;
+      console.warn('[TACT] STL overflow on page '+pageNum+': '+lost+' Braille line(s) would be dropped. Page capacity: '+widths.length+' lines. This should never happen — paginateStory pre-checks capacity. Please report.');
+      try{ window.dispatchEvent(new CustomEvent('tact:stl-overflow',{detail:{pageNum:pageNum,lost:lost}})); }catch(_){}
+    }
     lines.slice(0,widths.length).forEach(function(line,li){
       var cy=LINE_Y0-li*LINE_H;
       line.forEach(function(cell,ci){
@@ -1082,6 +1087,7 @@ window.TACT = (function () {
         cell.forEach(function(d){ var o=DOFF[d]; if(o)dot(tris,cx+o[0],cy+o[1]); });
       });
     });
+
     // Illustration pillars (SVG rasterized at ILL_PIX mm/px)
     if(illPillars&&illPillars.length){
       for(var i=0;i<illPillars.length;i+=2){
