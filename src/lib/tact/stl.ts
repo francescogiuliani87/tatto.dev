@@ -201,6 +201,17 @@ export function generateSTL(
   roundedSlab(tris, 0, 0, PAGE_W, PAGE_H, 0, BASE_H, CORNER_R, 8);
 
   const lines = layoutLines(brailleCells, widths);
+  if (lines.length > widths.length) {
+    const lost = lines.length - widths.length;
+    // Guard: paginateStory upstream already sizes each page to fit, so this
+    // should be unreachable. If it ever fires we want a loud signal, not a
+    // silently-truncated Braille page shipped to a blind child.
+    console.warn(
+      `[TACT] STL overflow: ${lost} Braille line(s) exceed page capacity ` +
+        `(${widths.length}). Text will be truncated. Split the input into ` +
+        `smaller pages before calling generateSTL.`,
+    );
+  }
   lines.slice(0, widths.length).forEach((line, li) => {
     const cy = LINE_Y0 - li * LINE_H;
     line.forEach((cell, ci) => {
@@ -212,6 +223,7 @@ export function generateSTL(
       }
     });
   });
+
 
   if (illPillars && illPillars.length) {
     for (let i = 0; i < illPillars.length; i += 2) {
