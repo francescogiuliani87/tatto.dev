@@ -398,12 +398,7 @@
   resize();
 
   var start = performance.now();
-  var lastFrame = 0;
-  function frame(now) {
-    requestAnimationFrame(frame);
-    if (document.hidden) return;
-    if (now - lastFrame < 33) return;
-    lastFrame = now;
+  function frame() {
     mouse[0] += (target[0] - mouse[0]) * 0.05;
     mouse[1] += (target[1] - mouse[1]) * 0.05;
     gl.uniform2f(u_res,   canvas.width, canvas.height);
@@ -411,7 +406,9 @@
     gl.uniform2f(u_mouse, mouse[0] * (window.devicePixelRatio || 1), mouse[1] * (window.devicePixelRatio || 1));
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
-  requestAnimationFrame(frame);
+  frame();
+  window.addEventListener("resize", function() { resize(); frame(); }, { passive: true });
+  window.addEventListener("pointermove", function() { requestAnimationFrame(frame); }, { passive: true });
 })();
 </script>
 
@@ -923,7 +920,8 @@ window.TACT = (function () {
     const originals = Array.from(track.children).slice(0, baseCount);
     const groupWidth = loopWidthFor(track);
     const visibleWidth = track.parentElement ? track.parentElement.clientWidth : window.innerWidth;
-    const minWidth = visibleWidth + groupWidth * 2;
+    const minGroups = 7;
+    const minWidth = Math.max(visibleWidth + groupWidth * 2, groupWidth * minGroups);
 
     while (track.scrollWidth < minWidth) {
       originals.forEach((child) => {
@@ -947,13 +945,16 @@ window.TACT = (function () {
 
     ensureCopies(track);
     const loopWidth = loopWidthFor(track);
-    const duration = Math.max(850, Math.round((loopWidth / SPEED) * 1000));
+    const groups = Math.max(1, Math.floor(track.scrollWidth / loopWidth));
+    const loopsPerCycle = Math.max(1, Math.min(4, groups - 2));
+    const distance = loopWidth * loopsPerCycle;
+    const duration = Math.max(1200, Math.round((distance / SPEED) * 1000));
     track.style.transform = 'translate3d(0,0,0)';
 
     const animation = track.animate(
       [
         { transform: 'translate3d(0,0,0)' },
-        { transform: `translate3d(${-loopWidth}px,0,0)` }
+        { transform: `translate3d(${-distance}px,0,0)` }
       ],
       { duration, iterations: Infinity, easing: 'linear' }
     );
