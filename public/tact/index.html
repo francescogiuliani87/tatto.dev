@@ -1062,7 +1062,7 @@ window.TACT = (function () {
   }
 
   scan();
-  new MutationObserver(scan).observe(document.getElementById('root') || document.body, { childList: true, subtree: true });
+  setTimeout(scan, 500);
   window.addEventListener('resize', () => document.querySelectorAll('.drift').forEach(startAnimation), { passive: true });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => document.querySelectorAll('.drift').forEach(startAnimation));
   if (reduceMotion && reduceMotion.addEventListener) reduceMotion.addEventListener('change', () => document.querySelectorAll('.drift').forEach(startAnimation));
