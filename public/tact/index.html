@@ -244,13 +244,15 @@
 
 <!-- ─── Decorative side foxes (realistic, looking at each other) ────────── -->
 <style>
-  #tact-foxes{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+  #tact-foxes{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
   #tact-foxes img{position:fixed;bottom:0;height:min(88vh,900px);width:auto;opacity:.92;filter:drop-shadow(0 22px 40px rgba(20,10,0,.18))}
   #tact-foxes .fox-left{left:clamp(-260px,-12vw,-120px)}
   #tact-foxes .fox-right{right:clamp(-40px,-2vw,0px);bottom:clamp(-280px,-22vh,-160px)}
 
   @media (max-width:1280px){ #tact-foxes{display:none} }
 
+  /* Reader card sits above the fox illustrations */
+  .grid.grid-cols-12{position:relative;z-index:5}
   /* --- Reader responsive fix (mobile/tablet) --- */
   @media (max-width:900px){
     /* Stack braille page + text vertically */
