@@ -23,15 +23,20 @@ export const Route = createFileRoute('/api/generate-story')({
             })
           }
 
+          const requestSeed =
+            typeof crypto !== 'undefined' && 'randomUUID' in crypto
+              ? crypto.randomUUID()
+              : `${Date.now()}-${Math.random()}`
+
           const system =
             language === 'it'
-              ? `Sei uno scrittore di favole tattili per bambini ciechi e ipovedenti. Scrivi ESCLUSIVAMENTE in italiano. Genera una storia molto breve in ESATTAMENTE 3 paragrafi separati da una riga vuota. Ogni paragrafo: 1-2 frasi, massimo 22 parole, linguaggio semplice, sensoriale (tatto, suoni, profumi), adatto a bambini 4-8 anni. Nessun titolo, nessuna intestazione, nessuna numerazione. Solo il testo dei 3 paragrafi.`
-              : `You are a writer of tactile fairy tales for blind and visually impaired children. Write ONLY in English. Produce a very short story in EXACTLY 3 paragraphs separated by a blank line. Each paragraph: 1-2 sentences, max 22 words, simple sensory language (touch, sounds, smells), for ages 4-8. No title, no headings, no numbering. Just the 3 paragraphs.`
+              ? `Sei uno scrittore di favole tattili per bambini ciechi e ipovedenti. Scrivi ESCLUSIVAMENTE in italiano. Ogni richiesta deve essere una storia nuova inventata da zero: cambia protagonista, azione, oggetto tattile, piccolo problema e finale. Non riusare frasi modello, non copiare esempi, non produrre la stessa narrazione con parole diverse. Genera una storia molto breve in ESATTAMENTE 3 paragrafi separati da una riga vuota. Ogni paragrafo: 1-2 frasi, massimo 24 parole, linguaggio semplice, sensoriale (tatto, suoni, profumi), adatto a bambini 4-8 anni. Nessun titolo, nessuna intestazione, nessuna numerazione. Solo il testo dei 3 paragrafi.`
+              : `You are a writer of tactile fairy tales for blind and visually impaired children. Write ONLY in English. Every request must be a newly invented story from scratch: change the protagonist, action, tactile object, small problem, and ending. Do not reuse template sentences, do not copy examples, and do not produce the same narration with different words. Produce a very short story in EXACTLY 3 paragraphs separated by a blank line. Each paragraph: 1-2 sentences, max 24 words, simple sensory language (touch, sounds, smells), for ages 4-8. No title, no headings, no numbering. Just the 3 paragraphs.`
 
           const user =
             language === 'it'
-              ? `Idea del bambino: "${idea || 'un piccolo giardino della luna'}". Scrivi la favola in italiano.`
-              : `Child's idea: "${idea || 'a little moon garden'}". Write the fairy tale in English.`
+              ? `Idea del bambino: "${idea || 'sorprendimi con una nuova favola tattile'}". Seme creativo interno: ${requestSeed}. Usa questo seme per inventare dettagli unici e non stamparlo. Scrivi una favola nuova in italiano, non una variante di una storia già scritta.`
+              : `Child's idea: "${idea || 'surprise me with a new tactile fairy tale'}". Internal creative seed: ${requestSeed}. Use this seed to invent unique details and do not print it. Write a new fairy tale in English, not a variant of a story already written.`
 
           const upstream = await fetch('https://apihub.agnes-ai.com/v1/chat/completions', {
             method: 'POST',
@@ -45,8 +50,11 @@ export const Route = createFileRoute('/api/generate-story')({
                 { role: 'system', content: system },
                 { role: 'user', content: user },
               ],
-              temperature: 0.9,
-              max_tokens: 400,
+              temperature: 1.15,
+              top_p: 0.97,
+              presence_penalty: 0.7,
+              frequency_penalty: 0.45,
+              max_tokens: 500,
             }),
           })
 
