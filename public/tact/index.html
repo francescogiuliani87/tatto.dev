@@ -1161,16 +1161,68 @@ window.TACT = (function () {
   ov.addEventListener('click',function(){set(false)});
   document.getElementById('tact-menu-close').addEventListener('click',function(){set(false)});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')set(false)});
+  function applyLang(l){
+    panel.classList.toggle('lang-it',l==='it');
+    panel.querySelectorAll('.tm-lang button').forEach(function(x){
+      x.classList.toggle('active',x.getAttribute('data-set-lang')===l);
+    });
+  }
   panel.querySelectorAll('[data-set-lang]').forEach(function(b){
     b.addEventListener('click',function(){
       var l=b.getAttribute('data-set-lang');
-      panel.classList.toggle('lang-it',l==='it');
-      panel.querySelectorAll('.tm-lang button').forEach(function(x){x.classList.toggle('active',x===b)});
+      applyLang(l);
+      // propagate to header (React app)
+      var hb=findHeaderLangBtn(l);
+      if(hb && !isHeaderActive(hb)) hb.click();
     });
   });
-  // default language: match browser
+  function findHeaderLangBtn(l){
+    var target=l==='it'?'IT':'EN';
+    var candidates=document.querySelectorAll('header button, [class*="header"] button');
+    for(var i=0;i<candidates.length;i++){
+      var t=(candidates[i].textContent||'').trim().toUpperCase();
+      if(t===target) return candidates[i];
+    }
+    return null;
+  }
+  function isHeaderActive(b){
+    return b.getAttribute('aria-pressed')==='true' || /active|bg-\[|text-\[/.test(b.className) && b.dataset.active==='1';
+  }
+  function detectHeaderLang(){
+    var en=findHeaderLangBtn('en'), it=findHeaderLangBtn('it');
+    if(!en||!it) return null;
+    // Heuristic: the "active" button usually has darker bg / aria-pressed / different classes
+    if(en.getAttribute('aria-pressed')==='true') return 'en';
+    if(it.getAttribute('aria-pressed')==='true') return 'it';
+    // Compare classNames: active button has more classes or different bg
+    var ec=getComputedStyle(en).backgroundColor, ic=getComputedStyle(it).backgroundColor;
+    if(ec!==ic){
+      // whichever is darker/opaque is likely active
+      var parse=function(s){var m=s.match(/[\d.]+/g)||[];return m.slice(0,3).reduce(function(a,b){return a+parseFloat(b)},0)};
+      return parse(ec)<parse(ic)?'en':'it';
+    }
+    return null;
+  }
+  // Observe header for language changes
+  var syncing=false;
+  function syncFromHeader(){
+    if(syncing) return;
+    var l=detectHeaderLang();
+    if(!l) return;
+    var current=panel.classList.contains('lang-it')?'it':'en';
+    if(l!==current){ syncing=true; applyLang(l); syncing=false; }
+  }
+  var mo=new MutationObserver(syncFromHeader);
+  mo.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class','aria-pressed','style'],childList:true});
+  // initial sync (retry until React mounts)
+  var tries=0, iv=setInterval(function(){
+    tries++;
+    if(findHeaderLangBtn('en')){ syncFromHeader(); clearInterval(iv); }
+    else if(tries>40){ clearInterval(iv); }
+  },250);
+  // default language: match browser only if header not yet available
   if((navigator.language||'').toLowerCase().indexOf('it')===0){
-    panel.querySelector('[data-set-lang="it"]').click();
+    applyLang('it');
   }
 })();
 </script>
