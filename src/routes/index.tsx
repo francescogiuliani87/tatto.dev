@@ -12,7 +12,8 @@ export const Route = createFileRoute("/")({
         new Response(tactHtml, {
           headers: {
             "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Cache-Control": "public, max-age=300, s-maxage=600, stale-while-revalidate=86400",
+
           },
         }),
     },
