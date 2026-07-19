@@ -947,9 +947,15 @@ window.TACT = (function () {
     display:block;width:20px;height:1.6px;background:#f4efe6;
     margin:2.5px 0;border-radius:2px;transition:transform .25s ease, opacity .2s ease;
   }
-  #tact-menu-btn.open span:nth-child(1){transform:translateY(4.1px) rotate(45deg)}
-  #tact-menu-btn.open span:nth-child(2){opacity:0}
-  #tact-menu-btn.open span:nth-child(3){transform:translateY(-4.1px) rotate(-45deg)}
+  #tact-menu-btn.open{opacity:0;pointer-events:none;transform:scale(.85)}
+  #tact-menu-close{
+    position:absolute;top:18px;right:18px;width:38px;height:38px;
+    display:grid;place-items:center;background:transparent;
+    border:1px solid rgba(10,10,12,.18);border-radius:12px;cursor:pointer;
+    color:#0a0a0c;
+  }
+  #tact-menu-close:hover{background:rgba(10,10,12,.06)}
+  #tact-menu-close svg{width:16px;height:16px}
 
   #tact-menu-overlay{
     position:fixed;inset:0;z-index:55;background:rgba(20,18,16,.35);
@@ -1019,6 +1025,7 @@ window.TACT = (function () {
 </button>
 <div id="tact-menu-overlay"></div>
 <aside id="tact-menu-panel" aria-hidden="true" role="dialog" aria-label="How Tact works">
+  <button id="tact-menu-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <div class="tm-inner">
     <div class="tm-lang" role="tablist">
       <button type="button" data-set-lang="en" class="active">EN</button>
@@ -1135,6 +1142,7 @@ window.TACT = (function () {
   }
   btn.addEventListener('click',function(){set(!panel.classList.contains('open'))});
   ov.addEventListener('click',function(){set(false)});
+  document.getElementById('tact-menu-close').addEventListener('click',function(){set(false)});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')set(false)});
   panel.querySelectorAll('[data-set-lang]').forEach(function(b){
     b.addEventListener('click',function(){
