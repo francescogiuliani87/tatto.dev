@@ -304,11 +304,47 @@
   }
 
 
+  /* ────────── Reader mode: focus on the story, hide chrome ────────── */
+  body.tact-reader #root header,
+  body.tact-reader .mono.absolute.bottom-6,
+  body.tact-reader #tact-foxes,
+  body.tact-reader #root .drift,
+  body.tact-reader #root [class*="drift"]{
+    display:none !important;
+  }
+  body.tact-reader #root main{
+    padding-top:24px !important;
+    padding-bottom:24px !important;
+  }
 </style>
 <div id="tact-foxes" aria-hidden="true">
   <img class="fox-left" src="/tact/bear-left.png" alt=""/>
   <img class="fox-right" src="/tact/fox-left.png" alt=""/>
 </div>
+
+<script>
+(function(){
+  var READER_LABELS = ['Your finished story','La tua storia finita'];
+  function update(){
+    var root = document.getElementById('root');
+    if(!root) return;
+    var regions = root.querySelectorAll('[role="region"][aria-label]');
+    var inReader = false;
+    for(var i=0;i<regions.length;i++){
+      if(READER_LABELS.indexOf(regions[i].getAttribute('aria-label'))>=0){ inReader = true; break; }
+    }
+    document.body.classList.toggle('tact-reader', inReader);
+  }
+  var mo = new MutationObserver(update);
+  function boot(){
+    var root = document.getElementById('root');
+    if(!root){ requestAnimationFrame(boot); return; }
+    mo.observe(root, {childList:true, subtree:true, attributes:true, attributeFilter:['aria-label','role']});
+    update();
+  }
+  boot();
+})();
+</script>
 
 <div id="root" class="relative" style="z-index:2;"></div>
 
