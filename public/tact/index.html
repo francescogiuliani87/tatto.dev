@@ -63,9 +63,10 @@
     will-change: transform;
     backface-visibility: hidden;
     transform: translate3d(0, 0, 0);
+    transform-style: preserve-3d;
     width: max-content;
   }
-  .drift > * { flex: 0 0 auto; }
+  .drift > * { flex: 0 0 auto; transform: translateZ(0); }
   @media (prefers-reduced-motion: reduce) {
     .drift { transform: none !important; }
   }
@@ -894,43 +895,57 @@ window.TACT = (function () {
 </script>
 <script>
 (() => {
-  const SPEED = 0.48; // px/ms — RAF ticker: smoother and much faster than CSS marquee
-  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (reduceMotion) return;
+  const SPEED = 760; // px/s — compositor animation, fast and stable even when JS frames drop
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+  const animations = new WeakMap();
+  const resizeObservers = new WeakMap();
+
+  function loopWidthFor(track) {
+    const children = Array.from(track.children);
+    const halfway = Math.floor(children.length / 2);
+    if (children[halfway] && children[0]) {
+      return Math.max(1, children[halfway].offsetLeft - children[0].offsetLeft);
+    }
+    return Math.max(1, track.scrollWidth / 2);
+  }
+
+  function startAnimation(track) {
+    const previous = animations.get(track);
+    if (previous) previous.cancel();
+
+    if (reduceMotion && reduceMotion.matches) {
+      track.style.transform = 'none';
+      return;
+    }
+
+    const loopWidth = loopWidthFor(track);
+    const duration = Math.max(850, Math.round((loopWidth / SPEED) * 1000));
+    track.style.transform = 'translate3d(0,0,0)';
+
+    const animation = track.animate(
+      [
+        { transform: 'translate3d(0,0,0)' },
+        { transform: `translate3d(${-loopWidth}px,0,0)` }
+      ],
+      { duration, iterations: Infinity, easing: 'linear' }
+    );
+    animations.set(track, animation);
+  }
 
   function bootTicker(track) {
     if (!track || track.dataset.tactTicker === 'on') return;
     track.dataset.tactTicker = 'on';
-    let offset = 0;
-    let loopWidth = 1;
-    let paused = false;
-    let last = performance.now();
-    let raf = 0;
 
-    const measure = () => {
-      const children = Array.from(track.children);
-      const halfway = Math.floor(children.length / 2);
-      loopWidth = children[halfway]
-        ? Math.max(1, children[halfway].offsetLeft - children[0].offsetLeft)
-        : Math.max(1, track.scrollWidth / 2);
-    };
+    track.addEventListener('pointerenter', () => animations.get(track)?.pause(), { passive: true });
+    track.addEventListener('pointerleave', () => animations.get(track)?.play(), { passive: true });
 
-    const tick = (now) => {
-      const delta = Math.min(48, now - last);
-      last = now;
-      if (!paused) {
-        offset = (offset + delta * SPEED) % loopWidth;
-        track.style.transform = `translate3d(${-offset}px,0,0)`;
-      }
-      raf = requestAnimationFrame(tick);
-    };
+    if ('ResizeObserver' in window) {
+      const observer = new ResizeObserver(() => startAnimation(track));
+      observer.observe(track);
+      resizeObservers.set(track, observer);
+    }
 
-    track.addEventListener('pointerenter', () => { paused = true; }, { passive: true });
-    track.addEventListener('pointerleave', () => { paused = false; last = performance.now(); }, { passive: true });
-    window.addEventListener('resize', measure, { passive: true });
-    measure();
-    requestAnimationFrame(measure);
-    raf = requestAnimationFrame(tick);
+    requestAnimationFrame(() => startAnimation(track));
   }
 
   function scan() {
@@ -939,6 +954,9 @@ window.TACT = (function () {
 
   scan();
   new MutationObserver(scan).observe(document.getElementById('root') || document.body, { childList: true, subtree: true });
+  window.addEventListener('resize', () => document.querySelectorAll('.drift').forEach(startAnimation), { passive: true });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => document.querySelectorAll('.drift').forEach(startAnimation));
+  if (reduceMotion && reduceMotion.addEventListener) reduceMotion.addEventListener('change', () => document.querySelectorAll('.drift').forEach(startAnimation));
 })();
 </script>
 </body>
