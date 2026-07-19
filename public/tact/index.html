@@ -1317,15 +1317,48 @@ window.TACT = (function () {
 
       <div class="tm-hero" aria-hidden="true">
         <!-- monochrome hero: hand + braille dots -->
-        <svg viewBox="0 0 200 120" fill="none" stroke="currentColor" stroke-width="1.6">
-          <circle cx="30" cy="40" r="3.2" fill="currentColor"/><circle cx="30" cy="60" r="3.2" fill="currentColor"/><circle cx="30" cy="80" r="3.2" fill="currentColor"/>
-          <circle cx="50" cy="40" r="3.2" fill="currentColor"/><circle cx="50" cy="80" r="3.2" fill="currentColor"/>
-          <circle cx="70" cy="60" r="3.2" fill="currentColor"/><circle cx="70" cy="80" r="3.2" fill="currentColor"/>
-          <path d="M110 90 q4 -22 14 -34 q6 -8 6 -20 q0 -6 6 -6 q6 0 6 8 v22 h6 q6 0 6 6 v8 q0 4 -2 8 l-6 12 q-3 6 -10 6 h-20 q-6 0 -6 -10 z"/>
+        <svg viewBox="0 0 400 260" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <!-- open book, top-down 3/4 view -->
+          <g stroke-width="1.4" opacity=".9">
+            <path d="M40 210 L120 60 L210 74 L200 224 Z" fill="rgba(244,239,230,.04)"/>
+            <path d="M360 210 L280 60 L210 74 L200 224 Z" fill="rgba(244,239,230,.04)"/>
+            <path d="M210 74 L200 224" opacity=".55"/>
+            <!-- page ruled lines (left) -->
+            <path d="M132 96 L198 104 M128 118 L198 124 M124 140 L198 144 M120 162 L198 164 M116 184 L198 184" opacity=".28" stroke-width="1"/>
+          </g>
+          <!-- braille dots on right page (3x2 cells forming a word) -->
+          <g fill="currentColor">
+            <!-- cell 1 -->
+            <circle cx="232" cy="104" r="2.6"/><circle cx="244" cy="104" r="2.6"/>
+            <circle cx="232" cy="118" r="2.6"/>
+            <!-- cell 2 -->
+            <circle cx="266" cy="104" r="2.6"/>
+            <circle cx="266" cy="118" r="2.6"/><circle cx="278" cy="118" r="2.6"/>
+            <circle cx="266" cy="132" r="2.6"/>
+            <!-- cell 3 -->
+            <circle cx="300" cy="104" r="2.6"/><circle cx="312" cy="104" r="2.6"/>
+            <circle cx="300" cy="118" r="2.6"/><circle cx="312" cy="118" r="2.6"/>
+            <!-- row 2 -->
+            <circle cx="232" cy="158" r="2.6"/>
+            <circle cx="244" cy="172" r="2.6"/>
+            <circle cx="266" cy="158" r="2.6"/><circle cx="278" cy="158" r="2.6"/>
+            <circle cx="266" cy="172" r="2.6"/>
+            <circle cx="300" cy="158" r="2.6"/>
+            <circle cx="312" cy="172" r="2.6"/><circle cx="300" cy="186" r="2.6"/>
+          </g>
+          <!-- fingertip / hand reading, minimal outline -->
+          <g stroke="currentColor" stroke-width="1.6" fill="#0a0a0c">
+            <path d="M298 196 q6 -18 4 -34 q-2 -14 8 -16 q10 -2 12 10 l2 18 q10 -2 14 4 q4 6 -2 14 l-10 14 q-6 10 -18 12 l-16 2 q-8 0 -8 -6 q0 -10 14 -18 z"/>
+            <path d="M308 176 q-2 8 -4 14" opacity=".55" fill="none"/>
+          </g>
+          <!-- ambient dots -->
+          <g fill="currentColor" opacity=".35">
+            <circle cx="70" cy="40" r="1.6"/><circle cx="86" cy="46" r="1.2"/>
+            <circle cx="360" cy="46" r="1.4"/><circle cx="344" cy="36" r="1.2"/>
+          </g>
         </svg>
       </div>
 
-      <div class="tm-step">
         <div class="tm-num">01</div>
         <div>
           <h2>Pick or write a story</h2>
