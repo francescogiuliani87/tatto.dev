@@ -931,23 +931,36 @@ window.TACT = (function () {
 <!-- ─── Hamburger menu + How it works panel ──────────────────────────────── -->
 <style>
   #tact-menu-btn{
-    position:fixed;left:16px;bottom:16px;z-index:70;
-    width:48px;height:48px;display:grid;place-items:center;
-    background:rgba(10,10,12,.92);backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
-    border:1px solid rgba(255,255,255,.12);border-radius:14px;
-    cursor:pointer;transition:transform .2s ease, background .2s ease;
-    box-shadow:0 8px 24px rgba(0,0,0,.18);
+    position:fixed;left:18px;bottom:18px;z-index:70;
+    width:52px;height:52px;display:grid;place-items:center;
+    background:rgba(244,239,230,.72);
+    backdrop-filter:blur(14px) saturate(1.2);
+    -webkit-backdrop-filter:blur(14px) saturate(1.2);
+    border:1px solid rgba(10,10,12,.14);border-radius:999px;
+    cursor:pointer;
+    transition:transform .35s cubic-bezier(.2,.7,.2,1), background .3s ease, box-shadow .3s ease, border-color .3s ease;
+    box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 10px 28px -12px rgba(10,10,12,.28), 0 2px 6px rgba(10,10,12,.06);
   }
   @media (min-width:768px){
-    #tact-menu-btn{left:24px;bottom:24px;width:52px;height:52px}
+    #tact-menu-btn{left:28px;bottom:28px;width:58px;height:58px}
   }
-  #tact-menu-btn:hover{background:#0a0a0c;transform:translateY(-1px)}
+  #tact-menu-btn:hover{
+    background:rgba(244,239,230,.92);
+    border-color:rgba(10,10,12,.28);
+    transform:translateY(-2px);
+    box-shadow:0 1px 0 rgba(255,255,255,.7) inset, 0 18px 40px -14px rgba(10,10,12,.35), 0 3px 8px rgba(10,10,12,.08);
+  }
+  #tact-menu-btn:active{transform:translateY(0) scale(.97)}
+  #tact-menu-btn .tm-bars{display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center}
   #tact-menu-btn span{
-    display:block;width:20px;height:1.6px;background:#f4efe6;
-    margin:2.5px 0;border-radius:2px;transition:transform .25s ease, opacity .2s ease;
+    display:block;height:1.4px;background:#0a0a0c;border-radius:2px;
+    transition:width .3s cubic-bezier(.2,.7,.2,1), transform .35s ease, opacity .25s ease;
   }
-  #tact-menu-btn.open{opacity:0;pointer-events:none;transform:scale(.85)}
+  #tact-menu-btn span:nth-child(1){width:20px}
+  #tact-menu-btn span:nth-child(2){width:14px}
+  #tact-menu-btn span:nth-child(3){width:20px}
+  #tact-menu-btn:hover span:nth-child(2){width:20px}
+  #tact-menu-btn.open{opacity:0;pointer-events:none;transform:scale(.85) rotate(-8deg)}
   #tact-menu-close{
     position:absolute;top:18px;right:18px;width:38px;height:38px;
     display:grid;place-items:center;background:transparent;
@@ -1021,7 +1034,7 @@ window.TACT = (function () {
 </style>
 
 <button id="tact-menu-btn" aria-label="Menu" aria-expanded="false">
-  <span></span><span></span><span></span>
+  <div class="tm-bars"><span></span><span></span><span></span></div>
 </button>
 <div id="tact-menu-overlay"></div>
 <aside id="tact-menu-panel" aria-hidden="true" role="dialog" aria-label="How Tact works">
