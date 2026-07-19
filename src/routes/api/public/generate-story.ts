@@ -1,5 +1,33 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+function sanitizeStory(input: string): string {
+  let s = (input || '').replace(/\r/g, '').trim()
+  // Split into paragraphs, keep at most first 4.
+  const paras = s.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean).slice(0, 4)
+  const cleaned = paras.map((p) => {
+    const words = p.split(/\s+/)
+    const out: string[] = []
+    let lastRoot = ''
+    let repeats = 0
+    for (const w of words) {
+      const root = w.toLowerCase().replace(/[^a-zàèéìòù]/gi, '').slice(0, 5)
+      if (root && root === lastRoot) {
+        repeats++
+        if (repeats >= 2) break // 3rd repeat of same root → stop paragraph
+      } else {
+        repeats = 0
+        lastRoot = root
+      }
+      out.push(w)
+    }
+    let text = out.join(' ').trim()
+    // Ensure paragraph ends with sentence punctuation.
+    if (text && !/[.!?…]$/.test(text)) text = text.replace(/[,;:\-–—]+$/, '') + '.'
+    return text
+  })
+  return cleaned.join('\n\n')
+}
+
 const CORS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -51,11 +79,12 @@ export const Route = createFileRoute('/api/public/generate-story')({
                 { role: 'system', content: system },
                 { role: 'user', content: user },
               ],
-              temperature: 1.1,
-              top_p: 0.97,
-              presence_penalty: 0.7,
-              frequency_penalty: 0.4,
-              max_tokens: 700,
+              temperature: 0.85,
+              top_p: 0.9,
+              presence_penalty: 0.3,
+              frequency_penalty: 0.5,
+              max_tokens: 520,
+              stop: ['\n\n\n'],
             }),
 
 
@@ -72,7 +101,12 @@ export const Route = createFileRoute('/api/public/generate-story')({
           const data = (await upstream.json()) as {
             choices?: Array<{ message?: { content?: string } }>
           }
-          const story = (data.choices?.[0]?.message?.content || '').trim()
+          let story = (data.choices?.[0]?.message?.content || '').trim()
+
+          // Sanitize: remove degenerate repetitive tails (same root word repeated,
+          // or the same word repeated 3+ times in a row).
+          story = sanitizeStory(story)
+
           if (!story) {
             return new Response(JSON.stringify({ error: 'Empty story' }), {
               status: 502,
