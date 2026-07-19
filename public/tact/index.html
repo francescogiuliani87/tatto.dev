@@ -836,7 +836,7 @@ window.TACT = (function () {
 </script>
 <script>
 (() => {
-  const SPEED = 760; // px/s — compositor animation, fast and stable even when JS frames drop
+  const SPEED = 90; // px/s — leggibile: ~2s per attraversare un chip da 180px
   const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
   const animations = new WeakMap();
   const resizeObservers = new WeakMap();
