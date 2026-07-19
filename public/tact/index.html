@@ -1176,17 +1176,25 @@ window.TACT = (function () {
       if(hb && !isHeaderActive(hb)) hb.click();
     });
   });
+  function langFromButtonText(text){
+    var t=(text||'').trim().toUpperCase();
+    if(t==='IT' || t==='ITALIANO' || t==='ITALIAN') return 'it';
+    if(t==='EN' || t==='ENGLISH' || t==='INGLESE') return 'en';
+    return null;
+  }
   function findHeaderLangBtn(l){
-    var target=l==='it'?'IT':'EN';
     var candidates=document.querySelectorAll('header button, [class*="header"] button');
     for(var i=0;i<candidates.length;i++){
-      var t=(candidates[i].textContent||'').trim().toUpperCase();
-      if(t===target) return candidates[i];
+      if(panel.contains(candidates[i])) continue;
+      if(langFromButtonText(candidates[i].textContent)===l) return candidates[i];
     }
     return null;
   }
   function isHeaderActive(b){
-    return b.getAttribute('aria-pressed')==='true' || /active|bg-\[|text-\[/.test(b.className) && b.dataset.active==='1';
+    if(!b) return false;
+    if(b.getAttribute('aria-pressed')==='true') return true;
+    var bg=getComputedStyle(b).backgroundColor;
+    return bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
   }
   function detectHeaderLang(){
     var en=findHeaderLangBtn('en'), it=findHeaderLangBtn('it');
@@ -1217,14 +1225,14 @@ window.TACT = (function () {
     var t=e.target && e.target.closest && e.target.closest('button');
     if(!t) return;
     if(panel.contains(t)) return;
-    var txt=(t.textContent||'').trim().toUpperCase();
-    if(txt!=='EN' && txt!=='IT') return;
+    var lang=langFromButtonText(t.textContent);
+    if(!lang) return;
     // ensure it's the header lang button, not something else with same text
     if(!t.closest('header') && !/lang|locale/i.test(t.className||'')) {
       // still accept if it's short-text pill inside a small container
       if((t.textContent||'').length>3) return;
     }
-    syncing=true; applyLang(txt==='IT'?'it':'en'); syncing=false;
+    syncing=true; applyLang(lang); syncing=false;
   },true);
   // Fallback observer for programmatic changes
   var mo=new MutationObserver(syncFromHeader);
