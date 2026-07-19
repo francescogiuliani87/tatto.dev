@@ -73,7 +73,12 @@ export const Route = createFileRoute('/api/public/generate-story')({
           const data = (await upstream.json()) as {
             choices?: Array<{ message?: { content?: string } }>
           }
-          const story = (data.choices?.[0]?.message?.content || '').trim()
+          let story = (data.choices?.[0]?.message?.content || '').trim()
+
+          // Sanitize: remove degenerate repetitive tails (same root word repeated,
+          // or the same word repeated 3+ times in a row).
+          story = sanitizeStory(story)
+
           if (!story) {
             return new Response(JSON.stringify({ error: 'Empty story' }), {
               status: 502,
