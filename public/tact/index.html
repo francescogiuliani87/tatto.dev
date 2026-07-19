@@ -350,7 +350,7 @@
 (function () {
   var canvas = document.getElementById("chrome-bg");
   if (!canvas) return;
-  var gl = canvas.getContext("webgl", { antialias: true, premultipliedAlpha: false });
+  var gl = canvas.getContext("webgl", { antialias: false, premultipliedAlpha: false, powerPreference: "low-power" });
   if (!gl) return;
 
   var vert = "\n    attribute vec2 a_pos;\n    void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }\n  ";
@@ -387,7 +387,7 @@
   });
 
   function resize() {
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var dpr = 1;
     canvas.width  = Math.floor(window.innerWidth  * dpr);
     canvas.height = Math.floor(window.innerHeight * dpr);
     canvas.style.width  = window.innerWidth  + "px";
@@ -398,16 +398,20 @@
   resize();
 
   var start = performance.now();
-  function frame() {
+  var lastFrame = 0;
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (document.hidden) return;
+    if (now - lastFrame < 33) return;
+    lastFrame = now;
     mouse[0] += (target[0] - mouse[0]) * 0.05;
     mouse[1] += (target[1] - mouse[1]) * 0.05;
     gl.uniform2f(u_res,   canvas.width, canvas.height);
     gl.uniform1f(u_time,  (performance.now() - start) / 1000);
     gl.uniform2f(u_mouse, mouse[0] * (window.devicePixelRatio || 1), mouse[1] * (window.devicePixelRatio || 1));
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-    requestAnimationFrame(frame);
   }
-  frame();
+  requestAnimationFrame(frame);
 })();
 </script>
 
