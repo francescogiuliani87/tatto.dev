@@ -10,43 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiGenerateStoryRouteImport } from './routes/api/generate-story'
+import { Route as ApiPublicGenerateStoryRouteImport } from './routes/api/public/generate-story'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiGenerateStoryRoute = ApiGenerateStoryRouteImport.update({
-  id: '/api/generate-story',
-  path: '/api/generate-story',
+const ApiPublicGenerateStoryRoute = ApiPublicGenerateStoryRouteImport.update({
+  id: '/api/public/generate-story',
+  path: '/api/public/generate-story',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/api/generate-story': typeof ApiGenerateStoryRoute
+  '/api/public/generate-story': typeof ApiPublicGenerateStoryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/api/generate-story': typeof ApiGenerateStoryRoute
+  '/api/public/generate-story': typeof ApiPublicGenerateStoryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/api/generate-story': typeof ApiGenerateStoryRoute
+  '/api/public/generate-story': typeof ApiPublicGenerateStoryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/generate-story'
+  fullPaths: '/' | '/api/public/generate-story'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/generate-story'
-  id: '__root__' | '/' | '/api/generate-story'
+  to: '/' | '/api/public/generate-story'
+  id: '__root__' | '/' | '/api/public/generate-story'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ApiGenerateStoryRoute: typeof ApiGenerateStoryRoute
+  ApiPublicGenerateStoryRoute: typeof ApiPublicGenerateStoryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -58,11 +58,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/generate-story': {
-      id: '/api/generate-story'
-      path: '/api/generate-story'
-      fullPath: '/api/generate-story'
-      preLoaderRoute: typeof ApiGenerateStoryRouteImport
+    '/api/public/generate-story': {
+      id: '/api/public/generate-story'
+      path: '/api/public/generate-story'
+      fullPath: '/api/public/generate-story'
+      preLoaderRoute: typeof ApiPublicGenerateStoryRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -70,7 +70,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ApiGenerateStoryRoute: ApiGenerateStoryRoute,
+  ApiPublicGenerateStoryRoute: ApiPublicGenerateStoryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

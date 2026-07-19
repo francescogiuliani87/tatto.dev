@@ -7,7 +7,7 @@ const CORS = {
   'Cache-Control': 'no-store',
 }
 
-export const Route = createFileRoute('/api/generate-story')({
+export const Route = createFileRoute('/api/public/generate-story')({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),

@@ -740,7 +740,7 @@ window.TACT = (function () {
     // the status line to "Sto scrivendo la storia…" / "Writing your story…").
     if (onProgress) onProgress(1, 'writing', '', true);
     var started = Date.now();
-    return fetch('/api/generate-story?nonce=' + Date.now() + '-' + Math.random().toString(36).slice(2), {
+    return fetch('/api/public/generate-story?nonce=' + Date.now() + '-' + Math.random().toString(36).slice(2), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       cache: 'no-store',
