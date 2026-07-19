@@ -931,21 +931,25 @@ window.TACT = (function () {
 <!-- ─── Hamburger menu + How it works panel ──────────────────────────────── -->
 <style>
   #tact-menu-btn{
-    position:fixed;top:18px;right:18px;z-index:60;
-    width:44px;height:44px;display:grid;place-items:center;
-    background:rgba(255,255,255,.72);backdrop-filter:blur(10px);
+    position:fixed;left:16px;bottom:16px;z-index:70;
+    width:48px;height:48px;display:grid;place-items:center;
+    background:rgba(10,10,12,.92);backdrop-filter:blur(10px);
     -webkit-backdrop-filter:blur(10px);
-    border:1px solid rgba(0,0,0,.12);border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);border-radius:14px;
     cursor:pointer;transition:transform .2s ease, background .2s ease;
+    box-shadow:0 8px 24px rgba(0,0,0,.18);
   }
-  #tact-menu-btn:hover{background:rgba(255,255,255,.92);transform:translateY(-1px)}
+  @media (min-width:768px){
+    #tact-menu-btn{left:24px;bottom:24px;width:52px;height:52px}
+  }
+  #tact-menu-btn:hover{background:#0a0a0c;transform:translateY(-1px)}
   #tact-menu-btn span{
-    display:block;width:18px;height:1.5px;background:#0a0a0c;
+    display:block;width:20px;height:1.6px;background:#f4efe6;
     margin:2.5px 0;border-radius:2px;transition:transform .25s ease, opacity .2s ease;
   }
-  #tact-menu-btn.open span:nth-child(1){transform:translateY(4px) rotate(45deg)}
+  #tact-menu-btn.open span:nth-child(1){transform:translateY(4.1px) rotate(45deg)}
   #tact-menu-btn.open span:nth-child(2){opacity:0}
-  #tact-menu-btn.open span:nth-child(3){transform:translateY(-4px) rotate(-45deg)}
+  #tact-menu-btn.open span:nth-child(3){transform:translateY(-4.1px) rotate(-45deg)}
 
   #tact-menu-overlay{
     position:fixed;inset:0;z-index:55;background:rgba(20,18,16,.35);
