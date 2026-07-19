@@ -1142,6 +1142,7 @@ window.TACT = (function () {
   }
   btn.addEventListener('click',function(){set(!panel.classList.contains('open'))});
   ov.addEventListener('click',function(){set(false)});
+  document.getElementById('tact-menu-close').addEventListener('click',function(){set(false)});
   document.addEventListener('keydown',function(e){if(e.key==='Escape')set(false)});
   panel.querySelectorAll('[data-set-lang]').forEach(function(b){
     b.addEventListener('click',function(){
