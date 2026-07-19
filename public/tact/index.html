@@ -736,7 +736,10 @@ window.TACT = (function () {
 
   window.TACT.webgpuSupported = true;
   window.TACT.generateStory = function (prompt, lang, onProgress) {
-    if (onProgress) onProgress(0.1, 'writing', 'agnes', true);
+    // Signal "writing" immediately (k>=1 clears the download bar and switches
+    // the status line to "Sto scrivendo la storia…" / "Writing your story…").
+    if (onProgress) onProgress(1, 'writing', '', true);
+    var started = Date.now();
     return fetch('/api/generate-story?nonce=' + Date.now() + '-' + Math.random().toString(36).slice(2), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -746,16 +749,17 @@ window.TACT = (function () {
       if (!res.ok) throw new Error('agnes-http-' + res.status);
       return res.json();
     }).then(function (data) {
-      if (onProgress) onProgress(1, 'writing', 'agnes', true);
       var story = (data && data.story) ? String(data.story).trim() : '';
       if (!story) throw new Error('agnes-empty');
-      return story;
+      // Keep the loading state visible at least 900ms so the user sees feedback.
+      var wait = Math.max(0, 900 - (Date.now() - started));
+      return new Promise(function (r) { setTimeout(function () { r(story); }, wait); });
     }).catch(function (err) {
       console.warn('[TACT] Agnes failed, fallback to local:', err);
-      if (onProgress) onProgress(1, 'writing', 'local-fallback', true);
       return lang === 'it' ? italianStory(prompt) : englishStory(prompt);
     });
   };
+
 })();
 </script>
 
