@@ -77,25 +77,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Tact — Braille + STL demo" },
+      { title: "Tatto.dev — Tactile Braille stories to 3D print" },
       {
         name: "description",
         content:
-          "In-browser Grade 1 Braille translation (Italian/English) and printable STL 3D page, ported from thatsfaso/tact.",
+          "Tatto.dev turns short bedtime stories into 3D printable tactile pages — Grade 1 Braille text and raised illustrations for blind and low‑vision children. Free & open source.",
       },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Tact — Braille + STL demo" },
+      { name: "author", content: "Iliano Fasolino" },
+      { property: "og:title", content: "Tatto.dev — Tactile Braille stories to 3D print" },
       {
         property: "og:description",
         content:
-          "In-browser Grade 1 Braille translation (Italian/English) and printable STL 3D page, ported from thatsfaso/tact.",
+          "Turn short bedtime stories into 3D printable tactile pages — Braille text and raised illustrations for blind and low‑vision children.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Tatto.dev" },
+      { property: "og:url", content: "https://tatto.dev/" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Tact — Braille + STL demo" },
-      { name: "twitter:description", content: "In-browser Grade 1 Braille translation (Italian/English) and printable STL 3D page, ported from thatsfaso/tact." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c283c9c5-4c14-4c29-91be-f2dca2011fc8/id-preview-bd658da1--4db516e3-3243-435b-a034-235f23b76521.lovable.app-1784430072750.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c283c9c5-4c14-4c29-91be-f2dca2011fc8/id-preview-bd658da1--4db516e3-3243-435b-a034-235f23b76521.lovable.app-1784430072750.png" },
+      { name: "twitter:title", content: "Tatto.dev — Tactile Braille stories to 3D print" },
+      { name: "twitter:description", content: "Turn short bedtime stories into 3D printable tactile pages — Braille text and raised illustrations for blind and low‑vision children." },
     ],
     links: [
       {
