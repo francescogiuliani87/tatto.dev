@@ -730,8 +730,24 @@ window.TACT = (function () {
 
   window.TACT.webgpuSupported = true;
   window.TACT.generateStory = function (prompt, lang, onProgress) {
-    if (onProgress) onProgress(1, 'writing', 'local', true);
-    return Promise.resolve(lang === 'it' ? italianStory(prompt) : englishStory(prompt));
+    if (onProgress) onProgress(0.1, 'writing', 'agnes', true);
+    return fetch('/api/generate-story', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompt || '', lang: lang || 'en' })
+    }).then(function (res) {
+      if (!res.ok) throw new Error('agnes-http-' + res.status);
+      return res.json();
+    }).then(function (data) {
+      if (onProgress) onProgress(1, 'writing', 'agnes', true);
+      var story = (data && data.story) ? String(data.story).trim() : '';
+      if (!story) throw new Error('agnes-empty');
+      return story;
+    }).catch(function (err) {
+      console.warn('[TACT] Agnes failed, fallback to local:', err);
+      if (onProgress) onProgress(1, 'writing', 'local-fallback', true);
+      return lang === 'it' ? italianStory(prompt) : englishStory(prompt);
+    });
   };
 })();
 </script>
